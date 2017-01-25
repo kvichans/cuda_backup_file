@@ -1,6 +1,6 @@
 [info]
-title=Backup current file
-desc=Create copy
+title=Backup File
+desc=Creates backup copy of current file, a) by command in Plugins, b) auto-creation before file saving
 type=cudatext-plugin
 subdir=cuda_backup_file
 homepage=https://github.com/kvichans/cuda_backup_file
@@ -11,12 +11,12 @@ events=on_save_pre
 
 [item11]
 section=commands
-caption=Backup current file\Create a copy or compare with old ones...
+caption=Backup File\Create a copy or compare with old ones...
 method=menuBK
 ;menu=0
 
 [item99]
 section=commands
-caption=Backup current file\Config...
+caption=Backup File\Config...
 method=dlg_config
 ;menu=0
