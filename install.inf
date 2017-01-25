@@ -1,0 +1,22 @@
+[info]
+title=Backup current file
+desc=Create copy
+type=cudatext-plugin
+subdir=cuda_backup_file
+homepage=https://github.com/kvichans/cuda_backup_file
+
+[item1]
+section=events
+events=on_save_pre
+
+[item11]
+section=commands
+caption=Backup current file\Create a copy or compare with old ones...
+method=menuBK
+;menu=0
+
+[item99]
+section=commands
+caption=Backup current file\Config...
+method=dlg_config
+;menu=0
