@@ -12,7 +12,7 @@ events=on_save_pre
 [item11]
 section=commands
 caption=Backup File\Create a copy or compare with old ones...
-method=menuBK
+method=copy_bk_or_compare
 ;menu=0
 
 [item99]
