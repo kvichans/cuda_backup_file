@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '0.8.0 2017-02-01'
+    '0.8.1 2017-02-02'
 ToDo: (see end of file)
 '''
 
@@ -88,7 +88,8 @@ def get_bk_path(path:str, dr_mask:str, fn_mask:str, ops='')->str:
                 '{FILE_EXT|title}'              'Ext'
     """
     if '{' not in dr_mask+fn_mask:
-        return (dr_mask + os.sep + fn_mask).strip(os.sep)
+        return dr_mask + os.sep + fn_mask
+#       return (dr_mask + os.sep + fn_mask).strip(os.sep)
     dr,fn   = os.path.split(path)
     st,ex   = fn.rsplit('.', 1) + ([] if '.' in fn else [''])
     nw      = datetime.datetime.now()
@@ -163,14 +164,17 @@ def get_bk_path(path:str, dr_mask:str, fn_mask:str, ops='')->str:
     bk_path = dr_mask + os.sep + fn_mask
 
     if '{COUNTER' not in fn_mask:
-        return bk_path.strip(os.sep)
-    mtch_w  = re.search('{COUNTER(\|limit:\d+)?(\|w:\d+)?}', fn_mask)
+        return bk_path
+#       return bk_path.strip(os.sep)
+    mtch_w  = re.search('{COUNTER(\|lim:\d+)?(\|w:\d+)?}', fn_mask)
     if not mtch_w:
-        return bk_path.strip(os.sep)
+        return bk_path
+#       return bk_path.strip(os.sep)
     counter = mtch_w.group(0)
-    mod_n   = int(mtch_w.group(1)[len('|limit:'):])   if mtch_w.group(1) else -1
-    wdth    = int(mtch_w.group(2)[len('|w:'    ):])   if mtch_w.group(2) else 0
-    pass;                      #LOG and log('fn_mask, re.compile={}',(fn_mask,fn_mask[:mtch_w.start()],f(r'(\d{})', '{'+str(wdth)+'}' if wdth else '+'),fn_mask[mtch_w.end():]))
+    mod_n   = int(mtch_w.group(1)[len('|lim:'):])   if mtch_w.group(1) else -1
+    wdth    = int(mtch_w.group(2)[len('|w:'  ):])   if mtch_w.group(2) else 0
+    pass;                      #LOG and log('fn_mask, re.compile={}',(fn_mask,fn_mask[:mtch_w.start()]
+                               #                                     ,f(r'(\d{})', '{'+str(wdth)+'}' if wdth else '+'),fn_mask[mtch_w.end():]))
     cntd_re = re.compile(re.escape(fn_mask[:mtch_w.start()]) 
                         +f(r'(\d{})', '{'+str(wdth)+'}' if wdth else '+') 
                         +re.escape(fn_mask[mtch_w.end():]))
@@ -184,42 +188,58 @@ def get_bk_path(path:str, dr_mask:str, fn_mask:str, ops='')->str:
         if mtch:
             pass;              #LOG and log('filename={}',(filename))
             dt  = os.path.getmtime(dr_mask + os.sep + filename)
-            if best_dt < dt:
+            if  best_dt < dt:
                 best_dt = dt
                 best_cnt= int(mtch.group(1))
     next_cnt    = 1 if best_cnt==-1         else \
                   1 if best_cnt==1+mod_n    else \
                   1+best_cnt
-    cnt_s       = width(str(next_cnt), wdth)#, fllr)
+    cnt_s       = width(str(next_cnt), wdth)
     bk_path     = dr_mask + os.sep + fn_mask.replace(counter, cnt_s)
     pass;                      #LOG and log('cnt_s,counter,bk_path={}',(cnt_s,counter,bk_path))
-    return bk_path.strip(os.sep)
+    return bk_path
+#   return bk_path.strip(os.sep)
    #def get_bk_path
 
 CFG_JSON    = app.app_path(app.APP_DIR_SETTINGS)+os.sep+'cuda_backup_file.json'
-DEMO_PATH   = 'file'+os.sep+'path'+os.sep+'filename.ext'
+DEMO_PATH   = 'demo'+os.sep+'path'+os.sep+'demofilename.demoext'
 MAX_HIST    = apx.get_opt('ui_max_history_edits', 20)
+
+def save_cfg(stores):
+    open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
+def load_cfg(modify=False, ops=''):
+    stores      = json.loads(open(CFG_JSON).read(), object_pairs_hook=OrdDict) \
+                    if os.path.exists(CFG_JSON) and os.path.getsize(CFG_JSON) != 0 else \
+                  OrdDict()
+    all_vrns    = stores.setdefault('all_vrns', [])     \
+                    if modify else                      \
+                  stores.get(       'all_vrns', [])
+    vrn_num     = stores.setdefault('vrn_num' , 0)      \
+                    if modify else                      \
+                  stores.get(       'vrn_num' , 0)
+    vrn_data    = setdefault(all_vrns, vrn_num, OrdDict())
+
+    if ops=='vrn_data':
+        return vrn_data
+    return stores, all_vrns, vrn_num, vrn_data
+   #def load_cfg
 
 class Command:
 
     def copy_bk_or_compare(self):#NOTE: menuBK
         cf_path     = ed.get_filename()
         if not cf_path: return
+        if ed.get_prop(app.PROP_MODIFIED) and \
+            app.msg_box(  _('Text modified!'
+                          '\nCommands "Copy to" and "Diff with" will use old state.'
+                        '\n\nContinue?')
+                           ,app.MB_YESNO+app.MB_ICONQUESTION
+                           )!=app.ID_YES:   return 
 
-        stores      = json.loads(open(CFG_JSON).read(), object_pairs_hook=OrdDict) \
-                        if os.path.exists(CFG_JSON) and os.path.getsize(CFG_JSON) != 0 else \
-                      OrdDict()
-        all_vrns    = stores.get('all_vrns', [])
-        vrn_num     = stores.get('vrn_num' , 0)
-        vrn_data    = setdefault(all_vrns, vrn_num, OrdDict())
+        vrn_data    = load_cfg(ops='vrn_data')
         if not vrn_data.get('mask'):
             if not self.dlg_config():   return
-            stores  = json.loads(open(CFG_JSON).read(), object_pairs_hook=OrdDict) \
-                        if os.path.exists(CFG_JSON) and os.path.getsize(CFG_JSON) != 0 else \
-                      OrdDict()
-            all_vrns= stores.get('all_vrns', [])
-            vrn_num = stores.get('vrn_num' , 0)
-            vrn_data= setdefault(all_vrns, vrn_num, OrdDict())
+            vrn_data= load_cfg(ops='vrn_data')
 
         sv_path = get_bk_path(cf_path, vrn_data['wher'], vrn_data['mask'])
         pass;                   LOG and log('sv_path={}',(sv_path))
@@ -257,8 +277,8 @@ class Command:
         mask    = mask.replace('{mm}'       , r'\d\d')
         mask    = mask.replace('{s}'        , r'\d')
         mask    = mask.replace('{ss}'       , r'\d\d')
-        mask    = re.sub(r'([^}]){MMMM}([^{])'      , r'\1\\w\+\2', mask)
-        mask    = re.sub(r'([^}]){COUNTER[^}]*}([^{])'   , r'\1\\d+\2', mask)
+        mask    = re.sub(r'([^}]){MMMM}([^{])'          , r'\1\\w+\2', mask)
+        mask    = re.sub(r'([^}]){COUNTER[^}]*}([^{])'  , r'\1\\d+\2', mask)
         pass;                   LOG and log('mask={}',(mask))
         re_mask = re.compile('^'+mask+'$')
 
@@ -266,50 +286,61 @@ class Command:
                         for f in files 
                         if re_mask.match(f)
                     )
-        pass;                  #log('prevs={}'.format(prevs))
+        pass;                  #log('prevs={}', prevs)
+        dfmx    = vrn_data.get('dfmx', 9)
         prevs   = sorted(prevs, key=lambda ft: ft[1], reverse=True)
         prevs   = list(zip(itertools.count(1), prevs))
-        prevs   = prevs[:vrn_data.get('dfmx', 9)]
-        pass;                  #log('prevs={}'.format(prevs))
-        pass;                  #log('prevs={}'.format(prevs))
-        what    = app.dlg_menu(app.MENU_LIST
-                , '\n'.join(
-                [    'Copy to     "{}"...'.format(sv_fn)                        # 0
-                ]+[  '-----------'                                              # 1
-                ]+[  'Diff with    "{}"'.format(f) for n,(f,t) in prevs]        # 2..
-                ))
+        prevs   = prevs[:vrn_data.get('dfmx', 9)] if dfmx else prevs
+        pass;                  #log('prevs={}', prevs)
+        if prevs:
+#           app.msg_status_alt(f(_('Backup dir: {}'), sv_dir), 10*60)
+            app.msg_status(f(_('Backup dir: {}'), sv_dir))
+            what    = app.dlg_menu(app.MENU_LIST
+                    , '\n'.join(
+                    [    f(_('Copy to…\t"{}"'), sv_fn)                          # 0
+                    ]+[  '-----------'                                          # 1
+                    ]+[  f(_('Diff with\t"{}"'), fn) for n,(fn,t) in prevs]     # 2..
+                    ))
+#           app.msg_status_alt(f(_('Backup dir: {}'), sv_dir), 0)
+            app.msg_status('')
+            if None is what or 1==what:
+                return
         pass;                  #log('what={}'.format(what))
         pass;                  #return
-        if 0:pass # cases
-        elif None is what: # or 1==what:
-            return
-        elif 0==what:
-            while True:
-                sv_fn    = app.dlg_input(_('Create backup with name'), sv_fn)
-                if sv_fn is None or 0==len(sv_fn): return
-                if os.path.isfile(sv_dir+os.sep+sv_fn) and \
-                    app.msg_box(f(_('Overwrite file\n{}\n?'), '    '+(sv_dir+os.sep+sv_fn).replace(os.sep, os.sep+'\n    '))
-                               ,app.MB_YESNO+app.MB_ICONQUESTION
-                               )==app.ID_YES:  break#while
-            try:
-                shutil.copyfile(cf_path, sv_dir+os.sep+sv_fn)
-                pass;           log('src, trg={}',(cf_path, sv_dir+os.sep+sv_fn))
-            except:
-                app.msg_status(f(_('Create backup fail: invalid path "{}"'), sv_dir+os.sep+sv_fn))
-                return
-            app.msg_status('Copy to {}'.format(sv_dir+os.sep+sv_fn))
-        elif 1==what:
-            return
-        else:
+        if prevs and what>1:
+            # Compare
             pass;              #log('what={}'.format(what))
             old_path    = sv_dir + os.sep + prevs[what-2][1][0]
             diff        = vrn_data['diff']
-            diff        = diff.replace('{BACKUP_PATH}' , old_path)
-            diff        = diff.replace('{CURRENT_PATH}', cf_path)
-            pass;               log('diff={}', (diff))
+            diff        = diff.replace('{BACKUP_PATH}'  , old_path)
+            diff        = diff.replace('{COPY_PATH}'    , old_path)
+            diff        = diff.replace('{CURRENT_PATH}' , cf_path)
+            diff        = diff.replace('{FILE_PATH}'    , cf_path)
+            pass;               LOG and log('diff={}', (diff))
             subprocess.Popen(diff)
-#           subprocess.Popen(f('{} {} {}',sDiffExe, cf_path, old_path))
-#           subprocess.Popen((sDiffExe, cf_path, old_path))
+    #       subprocess.Popen(f('{} {} {}',sDiffExe, cf_path, old_path))
+    #       subprocess.Popen((sDiffExe, cf_path, old_path))
+            return
+        
+        # Copy
+        while True:
+            app.msg_status(f(_('Backup dir: {}'), sv_dir))
+            sv_fn    = app.dlg_input(_('Create backup with name'), sv_fn)
+            app.msg_status('')
+            if sv_fn is None or 0==len(sv_fn): return
+            if not os.path.isfile(sv_dir+os.sep+sv_fn):
+                break#while
+            if app.msg_box(f(_('Overwrite file\n{}\n?'), '    '+(sv_dir+os.sep+sv_fn).replace(os.sep, os.sep+'\n    '))
+                           ,app.MB_YESNO+app.MB_ICONQUESTION
+                           )==app.ID_YES:
+                break#while
+        try:
+            shutil.copyfile(cf_path, sv_dir+os.sep+sv_fn)
+            pass;               LOG and log('src, trg={}',(cf_path, sv_dir+os.sep+sv_fn))
+        except:
+            app.msg_status(f(_('Create backup fail: invalid path "{}"'), sv_dir+os.sep+sv_fn))
+            return
+        app.msg_status('Copy to {}'.format(sv_dir+os.sep+sv_fn))
        #def copy_bk_or_compare
 
     def on_save_pre(self, ed_self):#NOTE: on_save_pre
@@ -318,13 +349,8 @@ class Command:
         cf_path = ed.get_filename()
         if not cf_path: return
         pass;                  #LOG and log('??',())
-        stores  = json.loads(open(CFG_JSON).read(), object_pairs_hook=OrdDict) \
-                    if os.path.exists(CFG_JSON) and os.path.getsize(CFG_JSON) != 0 else \
-                  OrdDict()
-        all_vrns= stores.setdefault(         'all_vrns', [])
-        vrn_num = stores.setdefault(         'vrn_num' , 0)
-        vrn_data=        setdefault(all_vrns, vrn_num  , OrdDict())
-        if vrn_num==0 and len(vrn_data)==0: return
+        vrn_data= load_cfg(ops='vrn_data')
+        if  not vrn_data: return
         sv_path = get_bk_path(cf_path, vrn_data['whon'], vrn_data['maon'])
         pass;                   LOG and log('sv_path={}',(sv_path))
         sv_dir, \
@@ -372,12 +398,10 @@ class Command:
         #   Level 1: into stores, all_vrns, vrn_*   (content of/for file)
         #   Level 2: into vds                       (all for current variant)
         #   Level 3: into vals                      (visibled)
-        stores  = json.loads(open(CFG_JSON).read(), object_pairs_hook=OrdDict) \
-                    if os.path.exists(CFG_JSON) and os.path.getsize(CFG_JSON) != 0 else \
-                  OrdDict()
-        all_vrns= stores.setdefault(         'all_vrns', [])
-        vrn_num = stores.setdefault(         'vrn_num' , 0)
-        vrn_data=        setdefault(all_vrns, vrn_num  , OrdDict())
+        stores, \
+        all_vrns,\
+        vrn_num,\
+        vrn_data= load_cfg(modify=True)
         if vrn_num==0 and len(vrn_data)==0:
             vrn_data['wher']    = self.def_wher
             vrn_data['mask']    = self.def_mask
@@ -389,15 +413,16 @@ class Command:
         vds     = vrn_data.copy()
 
         DLG_W,  \
-        DLG_H   = 690, 340
+        DLG_H   = 790, 340
         svon_c  = _('Au&to-create backup before each saving')
         v4wo_h  = _('Insert macro')
         b4wo_h  = _('Browse dir')
         v4mo_h  = _('Insert macro')
         diff_h  = _('Command to compare (and merge) current file with one of its copy.'
-                  '\r{BACKUP_PATH}  - path of copy,'
-                  '\r{CURRENT_PATH} - path of current file.')
-        dfmx_h  = _('How many of copies will be shown to compare')
+                  '\r    {COPY_PATH} - path of copy,'
+                  '\r    {FILE_PATH} - path of current file.')
+        dfmx_h  = _('How many copies will be shown to compare'
+                  '\r    0 - all')
         
         stores['wher_hist'] = add_to_history(vds['wher'], stores.get('wher_hist', []), MAX_HIST, unicase=(os.name=='nt'))
         stores['mask_hist'] = add_to_history(vds['mask'], stores.get('mask_hist', []), MAX_HIST, unicase=(os.name=='nt'))
@@ -449,42 +474,41 @@ class Command:
                                    ,    adva and not vds['svon'], -120
                                    ,    adva and     vds['svon'],  -30)
             DLGH,DLGW   = DLG_H+  g1+g2, DLG_W
-#           DLGH,DLGW   = DLG_H+2*g1+g2, DLG_W
             pass;              #LOG and log('vals={}',(vals))
             cnts=([]
-                 +[dict(cid='lbtp',tp='lb'  ,t=  5      ,l=5+120    ,w=180  ,cap=_('Create backup with command')                )] # 
+                 +[dict(cid='lbtp',tp='lb'  ,t=  5      ,l=5+120    ,w=180  ,cap=_('Options for manual backup and compare')     )] # 
                  +[dict(           tp='lb'  ,tid='wher' ,l=5        ,w=120  ,cap=_('Copy to &dir:')                             )] # &d 
-                 +[dict(cid='wher',tp='cb'  ,t= 25      ,l=5+120    ,w=400  ,items=wher_l                                       )] #
-                 +[dict(cid='v4wh',tp='bt'  ,tid='wher' ,l=5+120+400,w= 80  ,cap=_('Add &var')                                  )] # &v 
-                 +[dict(cid='b4wh',tp='bt'  ,tid='wher' ,l=5+520+ 80,w= 35  ,cap=_('…')                                         )] #  
+                 +[dict(cid='wher',tp='cb'  ,t= 25      ,l=5+120    ,w=500  ,items=wher_l                                       )] #
+                 +[dict(cid='v4wh',tp='bt'  ,tid='wher' ,l=5+120+500,w= 80  ,cap=_('Add &var')                                  )] # &v 
+                 +[dict(cid='b4wh',tp='bt'  ,tid='wher' ,l=5+620+ 80,w= 35  ,cap=_('…')                                         )] #  
                  +[dict(           tp='lb'  ,tid='mask' ,l=5        ,w=120  ,cap=_('Planned &name:')                            )] # &n 
-                 +[dict(cid='mask',tp='cb'  ,t= 55      ,l=5+120    ,w=400  ,items=mask_l                                       )] #
-                 +[dict(cid='v4ma',tp='bt'  ,tid='mask' ,l=5+120+400,w= 80  ,cap=_('Add v&ar')                                  )] # &a 
-                 +[dict(cid='c4ma',tp='bt'  ,tid='mask' ,l=5+520+ 80,w= 80  ,cap=_('&Presets')                                  )] # &p
+                 +[dict(cid='mask',tp='cb'  ,t= 55      ,l=5+120    ,w=500  ,items=mask_l                                       )] #
+                 +[dict(cid='v4ma',tp='bt'  ,tid='mask' ,l=5+120+500,w= 80  ,cap=_('Add v&ar')                                  )] # &a 
+                 +[dict(cid='c4ma',tp='bt'  ,tid='mask' ,l=5+620+ 80,w= 80  ,cap=_('&Presets')                                  )] # &p
                     +([] if not adva else []                        
                  +[dict(           tp='lb'  ,tid='d4ma' ,l=5        ,w=120  ,cap=_('Demo: ')                                    )] # 
-                 +[dict(cid='d4ma',tp='ed'  ,t= 85      ,l=5+120    ,w=480                                      ,props='1,0,1'  )] #     ro,mono,brd
-                 +[dict(cid='u4ma',tp='bt'  ,tid='d4ma' ,l=5+120+480,w= 80  ,cap=_('&Update')                                   )] #  
+                 +[dict(cid='d4ma',tp='ed'  ,t= 85      ,l=5+120    ,w=580                                      ,props='1,0,1'  )] #     ro,mono,brd
+                 +[dict(cid='u4ma',tp='bt'  ,tid='d4ma' ,l=5+120+580,w= 80  ,cap=_('&Update')                                   )] #  
                  +[dict(           tp='lb'  ,tid='diff' ,l=5        ,w=120  ,cap=_('Di&ff command:'),hint=diff_h                )] # &f 
-                 +[dict(cid='diff',tp='cb'  ,t=115      ,l=5+120    ,w=400  ,items=diff_l                                       )] #
-                 +[dict(           tp='lb'  ,tid='diff' ,l=5+530    ,w=100  ,cap=_('Ma&x shown:')   ,hint=dfmx_h                )] # &x
-                 +[dict(cid='dfmx',tp='sp-ed',tid='diff',l=5+530+100,w= 50                                      ,props='2,20,1' )] #
+                 +[dict(cid='diff',tp='cb'  ,t=115      ,l=5+120    ,w=500  ,items=diff_l                                       )] #
+                 +[dict(           tp='lb'  ,tid='diff' ,l=5+630    ,w=100  ,cap=_('Ma&x shown:')   ,hint=dfmx_h                )] # &x
+                 +[dict(cid='dfmx',tp='sp-ed',tid='diff',l=5+630+100,w= 50                                      ,props='0,20,1' )] #
                     )
                  +[dict(           tp='--'  ,t=140+g1   ,l=0                                                                    )] # 
                  +[dict(cid='svon',tp='ch'  ,t=155+g1   ,l=5+120    ,w=290  ,cap=svon_c                         ,act=1          )] # &t
                     +([] if not vds['svon'] else []                        
                  +[dict(           tp='lb'  ,tid='whon' ,l=5        ,w=120  ,cap=_('Copy to d&ir:')                             )] # &i
-                 +[dict(cid='whon',tp='cb'  ,t=175+g1   ,l=5+120    ,w=400  ,items=whon_l                                       )] #
-                 +[dict(cid='v4wo',tp='bt'  ,tid='whon' ,l=5+120+400,w= 80  ,cap=_('Add va&r')  ,hint=v4wo_h                    )] # &r
-                 +[dict(cid='b4wo',tp='bt'  ,tid='whon' ,l=5+520+80 ,w= 35  ,cap=_('…')         ,hint=b4wo_h                    )] #  
+                 +[dict(cid='whon',tp='cb'  ,t=175+g1   ,l=5+120    ,w=500  ,items=whon_l                                       )] #
+                 +[dict(cid='v4wo',tp='bt'  ,tid='whon' ,l=5+120+500,w= 80  ,cap=_('Add va&r')  ,hint=v4wo_h                    )] # &r
+                 +[dict(cid='b4wo',tp='bt'  ,tid='whon' ,l=5+620+80 ,w= 35  ,cap=_('…')         ,hint=b4wo_h                    )] #  
                  +[dict(           tp='lb'  ,tid='maon' ,l=5        ,w=120  ,cap=_('Copy with na&me:')                          )] # &m
-                 +[dict(cid='maon',tp='cb'  ,t=205+g1   ,l=5+120    ,w=400  ,items=maon_l                                       )] #
-                 +[dict(cid='v4mo',tp='bt'  ,tid='maon' ,l=5+120+400,w= 80  ,cap=_('Ad&d var')  ,hint=v4mo_h                    )] # &d
-                 +[dict(cid='c4mo',tp='bt'  ,tid='maon' ,l=5+520+80 ,w= 80  ,cap=_('Pre&sets')                                  )] # &s
+                 +[dict(cid='maon',tp='cb'  ,t=205+g1   ,l=5+120    ,w=500  ,items=maon_l                                       )] #
+                 +[dict(cid='v4mo',tp='bt'  ,tid='maon' ,l=5+120+500,w= 80  ,cap=_('Ad&d var')  ,hint=v4mo_h                    )] # &d
+                 +[dict(cid='c4mo',tp='bt'  ,tid='maon' ,l=5+620+80 ,w= 80  ,cap=_('Pre&sets')                                  )] # &s
                     +([] if not adva else []                        
                  +[dict(           tp='lb'  ,tid='d4mo' ,l=5        ,w=120  ,cap=_('Demo: ')                                    )] # 
-                 +[dict(cid='d4mo',tp='ed'  ,t=235      ,l=5+120    ,w=480                                      ,props='1,0,1'  )] #     ro,mono,brd
-                 +[dict(cid='u4mo',tp='bt'  ,tid='d4mo' ,l=5+120+480,w= 80  ,cap=_('&Update')                                   )] #  
+                 +[dict(cid='d4mo',tp='ed'  ,t=235      ,l=5+120    ,w=580                                      ,props='1,0,1'  )] #     ro,mono,brd
+                 +[dict(cid='u4mo',tp='bt'  ,tid='d4mo' ,l=5+120+580,w= 80  ,cap=_('&Update')                                   )] #  
                     )
                     )
                  +[dict(           tp='--'  ,t=DLGH-45  ,l=0                                                                    )] # 
@@ -497,7 +521,7 @@ class Command:
                  +[dict(cid='!'   ,tp='bt'  ,tid='-'    ,l=DLGW-165 ,w=80   ,cap=_('OK')                        ,props='1'      )] #     default
                  +[dict(cid='-'   ,tp='bt'  ,t=DLGH-30  ,l=DLGW-85  ,w=80   ,cap=_('Cancel')                                    )] #  
                 )#NOTE: cfg
-            aid, vals,fid,chds = dlg_wrapper(_('Configure "Backup current file"'), DLGW, DLGH, cnts, vals, focus_cid=fid)
+            aid, vals,fid,chds = dlg_wrapper(_('Configure "Backup File"'), DLGW, DLGH, cnts, vals, focus_cid=fid)
             if aid is None or aid=='-':    return#while True
             pass;              #LOG and log('vals={}',(vals))
             
@@ -575,32 +599,36 @@ class Command:
 
             if aid in ('v4wh', 'v4ma', 'v4wo', 'v4mo'):
                 prms_l  =([]
-                        +[_('{FILE_DIR}             \tDirectory of current file')]
-                        +[_('{FILE_NAME}            \tName of current file with extention')]
-                        +[_('{FILE_STEM}            \tName of current file without extention')]
-                        +[_('{FILE_EXT}             \tExtention of current file')]
-                        +[_('{YY}                   \tCurrent year as 99')]
-                        +[_('{YYYY}                 \tCurrent year as 9999')]
-                        +[_('{M}                    \tCurrent month as 9')]
-                        +[_('{MM}                   \tCurrent month as 09')]
-                        +[_('{MMM}                  \tCurrent month as sep')]
-                        +[_('{MMMM}                 \tCurrent month as September')]
-                        +[_('{D}                    \tCurrent day as 9')]
-                        +[_('{DD}                   \tCurrent day as 09')]
-                        +[_('{h}                    \tCurrent hour as 9')]
-                        +[_('{hh}                   \tCurrent hour as 09')]
-                        +[_('{m}                    \tCurrent minute as 9')]
-                        +[_('{mm}                   \tCurrent minute as 09')]
-                        +[_('{s}                    \tCurrent second as 9')]
-                        +[_('{ss}                   \tCurrent second as 09')]
+                        +['{FILE_DIR}             \t'+_('Path of directory of current file')]
+                        +['{FILE_DIR|name}        \t'+_('Name of directory of current file')]
+                        +['{FILE_DIR|p}           \t'+_('Path of parent directory of current file')]
+                        +['{FILE_DIR|p|name}      \t'+_('Name of parent directory of current file')]
+                        +['{FILE_NAME}            \t'+_('Name of current file with extention')]
+                        +['{FILE_STEM}            \t'+_('Name of current file without extention')]
+                        +['{FILE_EXT}             \t'+_('Extention of current file')]
+                        +['{YY}                   \t'+_('Current year as 99')]
+                        +['{YYYY}                 \t'+_('Current year as 9999')]
+                        +['{M}                    \t'+_('Current month as 9')]
+                        +['{MM}                   \t'+_('Current month as 09')]
+                        +['{MMM}                  \t'+_('Current month as sep')]
+                        +['{MMMM}                 \t'+_('Current month as September')]
+                        +['{D}                    \t'+_('Current day as 9')]
+                        +['{DD}                   \t'+_('Current day as 09')]
+                        +['{h}                    \t'+_('Current hour as 9')]
+                        +['{hh}                   \t'+_('Current hour as 09')]
+                        +['{m}                    \t'+_('Current minute as 9')]
+                        +['{mm}                   \t'+_('Current minute as 09')]
+                        +['{s}                    \t'+_('Current second as 9')]
+                        +['{ss}                   \t'+_('Current second as 09')]
                         )+([] if aid not in ('v4ma', 'v4mo') else []
-                        +[_('{COUNTER}              \tAuto-incremented number: 1, 2, 3, …')]
-                        +[_('{COUNTER|limit:5}      \tAuto-incremented number with only values: 1, 2, 3, 4, 5')]
-                        +[_('{COUNTER|w:3}          \tAuto-incremented number with equal width: 001, 002, 003, …')]
-                        +[_('{COUNTER|limit:99|w:2} \tAuto-incremented number: 01, 02, 03, …, 99, 01, …')]
+                        +['{COUNTER}              \t'+_('Auto-incremented as: 1, 2, 3, …')]
+                        +['{COUNTER|lim:5}        \t'+_('Auto-incremented as: 1, 2, 3, 4, 5, 1, …')]
+                        +['{COUNTER|w:2}          \t'+_('Auto-incremented as: 01, 02, 03, …')]
+                        +['{COUNTER|lim:9|w:2}    \t'+_('Auto-incremented as: 01, 02, …, 09, 01, …')]
                         )
-                prms_l +=['{'+pj_k+'}               \t'+pj_v 
+                prms_l +=['{'+pj_k+'}             \t'+pj_v 
                             for pj_k, pj_v in get_proj_vars().items()]
+#               prm_i   = app.dlg_menu(app.MENU_LIST, '\n'.join(prms_l))
                 prm_i   = app.dlg_menu(app.MENU_LIST_ALT, '\n'.join(prms_l))
                 if prm_i is None:   continue
                 id      = {'v4wh':'wher'
@@ -630,8 +658,8 @@ class Command:
                         +[_('name~.ext\t{FILE_STEM}~.{FILE_EXT}')]
                         +[_('name.1.ext  name.2.ext …\t{FILE_STEM}.{COUNTER}.{FILE_EXT}')]
                         +[_('name.001.ext  name.002.ext …\t{FILE_STEM}.{COUNTER|w:3}.{FILE_EXT}')]
-                        +[_('name.1.ext  name.2.ext  name.3.ext  name.1.ext …\t{FILE_STEM}.{COUNTER|limit:3}.{FILE_EXT}')]
-                        +[_('name.01.ext … name.99.ext  name.01.ext …\t{FILE_STEM}.{COUNTER|limit:99|w:2}.{FILE_EXT}')]
+                        +[_('name.1.ext  name.2.ext  name.3.ext  name.1.ext …\t{FILE_STEM}.{COUNTER|lim:3}.{FILE_EXT}')]
+                        +[_('name.01.ext … name.99.ext  name.01.ext …\t{FILE_STEM}.{COUNTER|lim:99|w:2}.{FILE_EXT}')]
                         )
                 rd_i    = app.dlg_menu(app.MENU_LIST_ALT, '\n'.join(rds_l))
                 if rd_i is None:   continue
@@ -658,7 +686,7 @@ class Command:
                     continue
 
                 vrn_data.update(vds)
-                open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
+                save_cfg(stores)
                 break#while
             
             stores['wher_hist'] = add_to_history(vds['wher'],  stores.get('wher_hist', []), MAX_HIST, unicase=(os.name=='nt'))
@@ -667,30 +695,27 @@ class Command:
             stores['whon_hist'] = add_to_history(vds['whon'],  stores.get('whon_hist', []), MAX_HIST, unicase=(os.name=='nt'))
             stores['maon_hist'] = add_to_history(vds['maon'],  stores.get('maon_hist', []), MAX_HIST, unicase=(os.name=='nt'))
             stores['adva']      = adva
-            open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
+            save_cfg(stores)
            #while
+        
+        self.save_on= vrn_data.get('svon', self.def_svon)
         return True
        #def dlg_config
 
     def __init__(self):#NOTE: init
         self.save_on    = False
 
-        self.def_wher   = '{FILE_DIR}/bk'
+        self.def_wher   = '{FILE_DIR}'+os.sep+'bk'
         self.def_mask   = '{FILE_STEM}_{DD}{MMM}{YY}-{hh}.{FILE_EXT}'
         self.def_svon   = False
-        self.def_whon   = r'{FILE_DIR}\bk'
+        self.def_whon   = r'{FILE_DIR}'+os.sep+'bk'
         self.def_maon   = '{FILE_STEM}.{COUNTER|w:3}.{FILE_EXT}'
-        self.def_diff   = r'c:\Program Files (x86)\WinMerge\WinMergeU.exe {BACKUP_PATH} {CURRENT_PATH}' \
+        self.def_diff   = r'"c:\Program Files (x86)\WinMerge\WinMergeU.exe" "{COPY_PATH}" "{FILE_PATH}"' \
                             if os.name=='nt' else \
-                          r'diff -u {BACKUP_PATH} {CURRENT_PATH}'
-        self.def_dfmx   = nMaxBks
+                          r'diff -u "{COPY_PATH}" "{FILE_PATH}"'
+        self.def_dfmx   = 0
 
-        stores      = json.loads(open(CFG_JSON).read(), object_pairs_hook=OrdDict) \
-                        if os.path.exists(CFG_JSON) and os.path.getsize(CFG_JSON) != 0 else \
-                      OrdDict()
-        all_vrns    = stores.get('all_vrns', [])
-        vrn_num     = stores.get('vrn_num' , 0)
-        vrn_data    = setdefault(all_vrns, vrn_num, OrdDict())
+        vrn_data    = load_cfg(ops='vrn_data')
         self.save_on= vrn_data.get('svon', self.def_svon)
        #def __init__
    #class Command
@@ -720,24 +745,26 @@ All macros can include suffix (function) to transform value.
    {Data|fun:p1,p2}       - gets fun({Data},p1,p2)
    {Data|f1st:p1,p2|f2nd} - gets f2nd(f1st({Data},p1,p2))
 Predefined filters are:
-    p - parent for path
-    u - upper: "word"     -> "WORD"
-    l - lower: "WORD"     -> "word"
-    t - title: "he is"    -> "He Is"
+    p    - parent for path
+    name - last segment in path
+    u    - upper: "word"  -> "WORD"
+    l    - lower: "WORD"  -> "word"
+    t    - title: "he is" -> "He Is"
     Examples: If path is     'p1/p2/p3/stem.ext'
         {FILE_DIR}        -> 'p1/p2/p3'
         {FILE_DIR|p}      -> 'p1/p2'
+        {FILE_DIR|p|name} -> 'p2'
         {FILE_DIR|p:2}    -> 'p1'
         {FILE_STEM|u}     -> 'STEM'
         {FILE_EXT|t}      -> 'Ext'
 Predefined filters for {COUNTER} are:
-    w     - set width for value
-    limit - set maximum value
+    w   - set width for value
+    lim - set maximum value
     Examples: 
-        {COUNTER}             -> 1 -> 2 -> 3 -> 4 -> 5 -> …
-        {COUNTER|w:3}         -> 001 -> 002 -> 003 -> …
-        {COUNTER|limit:3}     -> 1 -> 2 -> 3 -> 1 -> 2 -> …
-        {COUNTER|limit:3|w:2} -> 01 -> 02 -> 03 -> 01 -> …
+        {COUNTER}           -> 1 -> 2 -> 3 -> 4 -> 5 -> …
+        {COUNTER|w:3}       -> 001 -> 002 -> 003 -> …
+        {COUNTER|lim:3}     -> 1 -> 2 -> 3 -> 1 -> 2 -> …
+        {COUNTER|lim:3|w:2} -> 01 -> 02 -> 03 -> 01 -> …
 ''')
     dlg_wrapper(_('Help'), GAP*2+600, GAP*3+25+650,
          [dict(cid='htx',tp='me'    ,t=GAP  ,h=650  ,l=GAP          ,w=600  ,props='1,1,1' ) #  ro,mono,border
