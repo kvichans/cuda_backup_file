@@ -247,8 +247,8 @@ class Command:
         sv_fn   = os.path.split(sv_path)
 
         if not os.path.isdir(sv_dir):
-            if app.msg_box(f(_('Create dir\n{}'), sv_dir)
-                          ,app.MB_YESNO+app.MB_ICONQUESTION)!=app.ID_YES:  return
+            if app.msg_box(f(_('Backup File needs to create dir\n{}'), sv_dir)
+                          ,app.MB_OKCANCEL+app.MB_ICONQUESTION)!=app.ID_OK:  return
             try:
                 os.makedirs(sv_dir)
             except:
@@ -411,6 +411,8 @@ class Command:
             vrn_data['whon']    = self.def_whon
             vrn_data['maon']    = self.def_maon
         vds     = vrn_data.copy()
+        vds.setdefault('diff', self.def_diff)
+        vds.setdefault('dfmx', self.def_dfmx)
 
         DLG_W,  \
         DLG_H   = 790, 340
