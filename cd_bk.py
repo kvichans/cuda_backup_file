@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '0.8.3 2017-02-03'
+    '0.8.4 2017-02-03'
 ToDo: (see end of file)
 '''
 
@@ -580,6 +580,9 @@ class Command:
                 elif vrn_act=='add':               # Add
                     all_vrns   += [{'wher': '',
                                     'mask': '',
+                                    'diff': '',
+                                    'dfsh': False,
+                                    'dfmx': 0,
                                     'svon': self.def_svon,
                                     'whon': '',
                                     'maon': '',
