@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '0.8.2 2017-02-02'
+    '0.8.3 2017-02-03'
 ToDo: (see end of file)
 '''
 
@@ -296,16 +296,16 @@ class Command:
         prevs   = prevs[:vrn_data.get('dfmx', 9)] if dfmx else prevs
         pass;                  #log('prevs={}', prevs)
         if prevs:
-#           app.msg_status_alt(f(_('Backup dir: {}'), sv_dir), 10*60)
-            app.msg_status(f(_('Backup dir: {}'), sv_dir))
+            app.msg_status_alt(f(_('Backup dir: {}'), sv_dir), 60)
+#           app.msg_status(f(_('Backup dir: {}'), sv_dir))
             what    = app.dlg_menu(app.MENU_LIST
                     , '\n'.join(
                     [    f(_('Copy to…\t"{}"'), sv_fn)                          # 0
                     ]+[  '-----------'                                          # 1
                     ]+[  f(_('Diff with\t"{}"'), fn) for n,(fn,t) in prevs]     # 2..
                     ))
-#           app.msg_status_alt(f(_('Backup dir: {}'), sv_dir), 0)
-            app.msg_status('')
+            app.msg_status_alt(f(_('Backup dir: {}'), sv_dir), 0)
+#           app.msg_status('')
             if None is what or 1==what:
                 return
         pass;                  #log('what={}'.format(what))
@@ -320,16 +320,16 @@ class Command:
             diff        = diff.replace('{CURRENT_PATH}' , cf_path)
             diff        = diff.replace('{FILE_PATH}'    , cf_path)
             pass;               LOG and log('diff={}', (diff))
-            subprocess.Popen(diff)
+            subprocess.Popen(diff, shell=vrn_data['dfsh'])
     #       subprocess.Popen(f('{} {} {}',sDiffExe, cf_path, old_path))
     #       subprocess.Popen((sDiffExe, cf_path, old_path))
             return
         
         # Copy
         while True:
-            app.msg_status(f(_('Backup dir: {}'), sv_dir))
+            app.msg_status_alt(f(_('Backup dir: {}'), sv_dir), 60)
             sv_fn    = app.dlg_input(_('Create backup with name'), sv_fn)
-            app.msg_status('')
+            app.msg_status_alt('', 0)
             if sv_fn is None or 0==len(sv_fn): return
             if not os.path.isfile(sv_dir+os.sep+sv_fn):
                 break#while
@@ -415,6 +415,7 @@ class Command:
             vrn_data['maon']    = self.def_maon
         vds     = vrn_data.copy()
         vds.setdefault('diff', self.def_diff)
+        vds.setdefault('dfsh', self.def_dfsh)
         vds.setdefault('dfmx', self.def_dfmx)
 
         DLG_W,  \
@@ -459,6 +460,7 @@ class Command:
                 vals.update(dict(
                            d4ma=dma_path
                           ,diff=vds['diff']
+                          ,dfsh=vds['dfsh']
                           ,dfmx=vds['dfmx']
                           ,vrns=vrn_num
                           ))
@@ -468,6 +470,7 @@ class Command:
                 vals.update(dict(
                            d4ma=dma_path
                           ,diff=vds['diff']
+                          ,dfsh=vds['dfsh']
                           ,dfmx=vds['dfmx']
                           ,d4mo=dmo_path
                           ,vrns=vrn_num
@@ -495,7 +498,8 @@ class Command:
                  +[dict(cid='d4ma',tp='ed'  ,t= 85      ,l=5+120    ,w=580                                      ,props='1,0,1'  )] #     ro,mono,brd
                  +[dict(cid='u4ma',tp='bt'  ,tid='d4ma' ,l=5+120+580,w= 80  ,cap=_('&Update')                                   )] #  
                  +[dict(           tp='lb'  ,tid='diff' ,l=5        ,w=120  ,cap=_('Di&ff command:'),hint=diff_h                )] # &f 
-                 +[dict(cid='diff',tp='cb'  ,t=115      ,l=5+120    ,w=500  ,items=diff_l                                       )] #
+                 +[dict(cid='diff',tp='cb'  ,t=115      ,l=5+120    ,w=400  ,items=diff_l                                       )] #
+                 +[dict(cid='dfsh',tp='ch'  ,tid='diff' ,l=5+520+ 10,w= 90  ,cap='Shell'                                        )] # &t
                  +[dict(           tp='lb'  ,tid='diff' ,l=5+630    ,w=100  ,cap=_('Ma&x shown:')   ,hint=dfmx_h                )] # &x
                  +[dict(cid='dfmx',tp='sp-ed',tid='diff',l=5+630+100,w= 50                                      ,props='0,20,1' )] #
                     )
@@ -530,7 +534,7 @@ class Command:
             if aid is None or aid=='-':    return#while True
             pass;              #LOG and log('vals={}',(vals))
             
-            vds.update({k:v for (k,v) in vals.items() if k in ('wher', 'mask', 'diff', 'dfmx', 'svon', 'whon', 'maon')})
+            vds.update({k:v for (k,v) in vals.items() if k in ('wher', 'mask', 'diff', 'dfsh', 'dfmx', 'svon', 'whon', 'maon')})
             if aid=='more':
                 adva    = not adva
             if aid=='?':
@@ -600,14 +604,14 @@ class Command:
                           ,'b4wo':'whon'}[aid]
                 vals[id]= fold
                 fid     = id
-                vds.update({k:v for (k,v) in vals.items() if k in ('wher', 'mask', 'diff', 'dfmx', 'svon', 'whon', 'maon')})
+                vds.update({k:v for (k,v) in vals.items() if k in ('wher', 'mask', 'diff', 'dfsh', 'dfmx', 'svon', 'whon', 'maon')})
 
             if aid in ('v4wh', 'v4ma', 'v4wo', 'v4mo'):
                 prms_l  =([]
                         +['{FILE_DIR}             \t'+_('Path of directory of current file')]
                         +['{FILE_DIR|name}        \t'+_('Name of directory of current file')]
-                        +['{FILE_DIR|p}           \t'+_('Path of parent directory of current file')]
-                        +['{FILE_DIR|p|name}      \t'+_('Name of parent directory of current file')]
+                        +['{FILE_DIR|p}           \t'+_('Path of directory level upper, than {FILE_DIR}')]
+                        +['{FILE_DIR|p|name}      \t'+_('Name of directory level upper, than {FILE_DIR}')]
                         +['{FILE_NAME}            \t'+_('Name of current file with extention')]
                         +['{FILE_STEM}            \t'+_('Name of current file without extention')]
                         +['{FILE_EXT}             \t'+_('Extention of current file')]
@@ -626,10 +630,10 @@ class Command:
                         +['{s}                    \t'+_('Current seconds as 9')]
                         +['{ss}                   \t'+_('Current seconds as 09')]
                         )+([] if aid not in ('v4ma', 'v4mo') else []
-                        +['{COUNTER}              \t'+_('Auto-incremented as: 1, 2, 3, …')]
-                        +['{COUNTER|lim:5}        \t'+_('Auto-incremented as: 1, 2, 3, 4, 5, 1, …')]
-                        +['{COUNTER|w:2}          \t'+_('Auto-incremented as: 01, 02, 03, …')]
-                        +['{COUNTER|lim:9|w:2}    \t'+_('Auto-incremented as: 01, 02, …, 09, 01, …')]
+                        +['{COUNTER}              \t'+_('Auto-incremented as: 1, 2, 3, 4, 5, …')]
+                        +['{COUNTER|lim:3}        \t'+_('Auto-incremented as: 1, 2, 3, 1, 2, …')]
+                        +['{COUNTER|w:2}          \t'+_('Auto-incremented as: 01, 02, 03, 04, …')]
+                        +['{COUNTER|lim:3|w:2}    \t'+_('Auto-incremented as: 01, 02, 03, 01, …')]
                         )
                 prms_l +=['{'+pj_k+'}             \t'+pj_v 
                             for pj_k, pj_v in get_proj_vars().items()]
@@ -642,7 +646,7 @@ class Command:
                           ,'v4mo':'maon'}[aid]
                 vals[id]+= prms_l[prm_i].split('\t')[0].strip()
                 fid     = id
-                vds.update({k:v for (k,v) in vals.items() if k in ('wher', 'mask', 'diff', 'dfmx', 'svon', 'whon', 'maon')})
+                vds.update({k:v for (k,v) in vals.items() if k in ('wher', 'mask', 'diff', 'dfsh', 'dfmx', 'svon', 'whon', 'maon')})
                 
             if aid == 'c4ma':
                 rds_l   =([]
@@ -655,7 +659,7 @@ class Command:
                 if rd_i is None:   continue
                 vals['mask']= rds_l[rd_i].split('\t')[1]
                 fid     = 'mask'
-                vds.update({k:v for (k,v) in vals.items() if k in ('wher', 'mask', 'diff', 'dfmx', 'svon', 'whon', 'maon')})
+                vds.update({k:v for (k,v) in vals.items() if k in ('wher', 'mask', 'diff', 'dfsh', 'dfmx', 'svon', 'whon', 'maon')})
             
             if aid == 'c4mo':
                 rds_l   =([]
@@ -670,7 +674,7 @@ class Command:
                 if rd_i is None:   continue
                 vals['maon']= rds_l[rd_i].split('\t')[1]
                 fid     = 'maon'
-                vds.update({k:v for (k,v) in vals.items() if k in ('wher', 'mask', 'diff', 'dfmx', 'svon', 'whon', 'maon')})
+                vds.update({k:v for (k,v) in vals.items() if k in ('wher', 'mask', 'diff', 'dfsh', 'dfmx', 'svon', 'whon', 'maon')})
             
             if aid=='!':
                 if not vals['wher'].strip():
@@ -718,6 +722,7 @@ class Command:
         self.def_diff   = r'"c:\Program Files (x86)\WinMerge\WinMergeU.exe" "{COPY_PATH}" "{FILE_PATH}"' \
                             if os.name=='nt' else \
                           r'diff -u "{COPY_PATH}" "{FILE_PATH}"'
+        self.def_dfsh   = False if os.name=='nt' else True
         self.def_dfmx   = 0
 
         vrn_data    = load_cfg(ops='vrn_data')
@@ -751,20 +756,21 @@ All macros can include suffix (function) to transform value.
    {Data|f1st:p1,p2|f2nd} - gets f2nd(f1st({Data},p1,p2))
 Predefined filters are:
     p    - parent for path
+    p:N  - N-parent for path ("p" is same as "p:1")
     name - last segment in path
     u    - upper: "word"  -> "WORD"
     l    - lower: "WORD"  -> "word"
     t    - title: "he is" -> "He Is"
-    Examples: If path is     'p1/p2/p3/stem.ext'
-        {FILE_DIR}        -> 'p1/p2/p3'
-        {FILE_DIR|p}      -> 'p1/p2'
+    Examples: If path is     'head/p1/p2/p3/stem.ext'
+        {FILE_DIR}        -> 'head/p1/p2/p3'
+        {FILE_DIR|p}      -> 'head/p1/p2'
         {FILE_DIR|p|name} -> 'p2'
-        {FILE_DIR|p:2}    -> 'p1'
-        {FILE_STEM|u}     -> 'STEM'
+        {FILE_DIR|p:2}    -> 'head/p1'
+        {FILE_EXT|u}      -> 'EXT'
         {FILE_EXT|t}      -> 'Ext'
 Predefined filters for {COUNTER} are:
-    w   - set width for value
-    lim - set maximum value
+    w:N   - set width for value
+    lim:N - set maximum value
     Examples: 
         {COUNTER}           -> 1 -> 2 -> 3 -> 4 -> 5 -> …
         {COUNTER|w:3}       -> 001 -> 002 -> 003 -> …
