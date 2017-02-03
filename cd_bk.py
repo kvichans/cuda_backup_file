@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '0.8.1 2017-02-02'
+    '0.8.2 2017-02-02'
 ToDo: (see end of file)
 '''
 
@@ -22,6 +22,9 @@ pass;                           pf=lambda d:pformat(d,width=150)
 
 _   = get_translation(__file__) # I18N
 
+VERSION     = re.split('Version:', __doc__)[1].split("'")[1]
+VERSION_V,  \
+VERSION_D   = VERSION.split(' ')
 sDiffExe    = r'c:\Program Files (x86)\WinMerge\WinMergeU.exe'
 nMaxBks     = 9
 
@@ -231,7 +234,7 @@ class Command:
         if not cf_path: return
         if ed.get_prop(app.PROP_MODIFIED) and \
             app.msg_box(  _('Text modified!'
-                          '\nCommands "Copy to" and "Diff with" will use old state.'
+                          '\nThe command will use old state.'
                         '\n\nContinue?')
                            ,app.MB_YESNO+app.MB_ICONQUESTION
                            )!=app.ID_YES:   return 
@@ -252,7 +255,7 @@ class Command:
             try:
                 os.makedirs(sv_dir)
             except:
-                app.msg_status(f(_('Fail to create dir "{}"'), sv_dir))
+                app.msg_status(f(_('Cannot create dir "{}"'), sv_dir))
                 return
         prevs   = ()
         files   = list(os.walk(sv_dir))[0][2]
@@ -338,7 +341,7 @@ class Command:
             shutil.copyfile(cf_path, sv_dir+os.sep+sv_fn)
             pass;               LOG and log('src, trg={}',(cf_path, sv_dir+os.sep+sv_fn))
         except:
-            app.msg_status(f(_('Create backup fail: invalid path "{}"'), sv_dir+os.sep+sv_fn))
+            app.msg_status(f(_('Cannot create backup copy: invalid path "{}"'), sv_dir+os.sep+sv_fn))
             return
         app.msg_status('Copy to {}'.format(sv_dir+os.sep+sv_fn))
        #def copy_bk_or_compare
@@ -357,17 +360,17 @@ class Command:
         sv_fn   = os.path.split(sv_path)
         if not os.path.isdir(sv_dir):
             if re.search(r'{\w+}', sv_dir):
-                app.msg_status_alt(f(_('Create backup fail: invalid dir "{}"'), sv_dir), 6)
+                app.msg_status_alt(f(_('Cannot create backup copy: invalid dir "{}"'), sv_dir), 6)
                 return
             try:
                 os.makedirs(sv_dir)
             except:
-                app.msg_status_alt(f(_('Create backup fail: invalid dir "{}"'), sv_dir), 6)
+                app.msg_status_alt(f(_('Cannot create backup copy: invalid dir "{}"'), sv_dir), 6)
                 return
         try:
             shutil.copyfile(cf_path, sv_path)
         except:
-            app.msg_status_alt(f(_('Create backup fail: invalid path "{}"'), sv_path), 6)
+            app.msg_status_alt(f(_('Cannot create backup copy: invalid path "{}"'), sv_path), 6)
             return
         app.msg_status_alt(f(_('Create backup: {}'), sv_path), 3)
         pass;                   LOG and log('ok',())
@@ -523,7 +526,7 @@ class Command:
                  +[dict(cid='!'   ,tp='bt'  ,tid='-'    ,l=DLGW-165 ,w=80   ,cap=_('OK')                        ,props='1'      )] #     default
                  +[dict(cid='-'   ,tp='bt'  ,t=DLGH-30  ,l=DLGW-85  ,w=80   ,cap=_('Cancel')                                    )] #  
                 )#NOTE: cfg
-            aid, vals,fid,chds = dlg_wrapper(_('Configure "Backup File"'), DLGW, DLGH, cnts, vals, focus_cid=fid)
+            aid, vals,fid,chds = dlg_wrapper(f(_('Configure "Backup File" ({})'), VERSION_V), DLGW, DLGH, cnts, vals, focus_cid=fid)
             if aid is None or aid=='-':    return#while True
             pass;              #LOG and log('vals={}',(vals))
             
@@ -616,12 +619,12 @@ class Command:
                         +['{MMMM}                 \t'+_('Current month as September')]
                         +['{D}                    \t'+_('Current day as 9')]
                         +['{DD}                   \t'+_('Current day as 09')]
-                        +['{h}                    \t'+_('Current hour as 9')]
-                        +['{hh}                   \t'+_('Current hour as 09')]
-                        +['{m}                    \t'+_('Current minute as 9')]
-                        +['{mm}                   \t'+_('Current minute as 09')]
-                        +['{s}                    \t'+_('Current second as 9')]
-                        +['{ss}                   \t'+_('Current second as 09')]
+                        +['{h}                    \t'+_('Current hours as 9')]
+                        +['{hh}                   \t'+_('Current hours as 09')]
+                        +['{m}                    \t'+_('Current minutes as 9')]
+                        +['{mm}                   \t'+_('Current minutes as 09')]
+                        +['{s}                    \t'+_('Current seconds as 9')]
+                        +['{ss}                   \t'+_('Current seconds as 09')]
                         )+([] if aid not in ('v4ma', 'v4mo') else []
                         +['{COUNTER}              \t'+_('Auto-incremented as: 1, 2, 3, …')]
                         +['{COUNTER|lim:5}        \t'+_('Auto-incremented as: 1, 2, 3, 4, 5, 1, …')]
