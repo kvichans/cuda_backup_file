@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '0.8.4 2017-02-03'
+    '0.8.5 2017-02-05'
 ToDo: (see end of file)
 '''
 
@@ -285,32 +285,34 @@ class Command:
         pass;                   LOG and log('mask={}',(mask))
         re_mask = re.compile('^'+mask+'$')
 
-        prevs   = list( (f, os.path.getmtime(sv_dir+os.sep+f)) 
-                        for f in files 
-                        if re_mask.match(f)
-                    )
-        pass;                  #log('prevs={}', prevs)
-        dfmx    = vrn_data.get('dfmx', 9)
-        prevs   = sorted(prevs, key=lambda ft: ft[1], reverse=True)
-        prevs   = list(zip(itertools.count(1), prevs))
-        prevs   = prevs[:vrn_data.get('dfmx', 9)] if dfmx else prevs
-        pass;                  #log('prevs={}', prevs)
-        if prevs:
-            app.msg_status_alt(f(_('Backup dir: {}'), sv_dir), 60)
-#           app.msg_status(f(_('Backup dir: {}'), sv_dir))
-            what    = app.dlg_menu(app.MENU_LIST
-                    , '\n'.join(
-                    [    f(_('Copy to…\t"{}"'), sv_fn)                          # 0
-                    ]+[  '-----------'                                          # 1
-                    ]+[  f(_('Diff with\t"{}"'), fn) for n,(fn,t) in prevs]     # 2..
-                    ))
-            app.msg_status_alt(f(_('Backup dir: {}'), sv_dir), 0)
-#           app.msg_status('')
-            if None is what or 1==what:
-                return
+        opdf    = vrn_data.get('opdf', self.def_opdf)
+        if opdf:
+            prevs   = list( (f, os.path.getmtime(sv_dir+os.sep+f)) 
+                            for f in files 
+                            if re_mask.match(f)
+                        )
+            pass;                  #log('prevs={}', prevs)
+            dfmx    = vrn_data.get('dfmx', self.def_dfmx)
+            prevs   = sorted(prevs, key=lambda ft: ft[1], reverse=True)
+            prevs   = list(zip(itertools.count(1), prevs))
+            prevs   = prevs[:dfmx] if dfmx else prevs
+            pass;                  #log('prevs={}', prevs)
+            if prevs:
+                app.msg_status_alt(f(_('Backup dir: {}'), sv_dir), 60)
+    #           app.msg_status(f(_('Backup dir: {}'), sv_dir))
+                what    = app.dlg_menu(app.MENU_LIST
+                        , '\n'.join(
+                        [    f(_('Copy to…\t"{}"'), sv_fn)                          # 0
+                        ]+[  '-----------'                                          # 1
+                        ]+[  f(_('Diff with\t"{}"'), fn) for n,(fn,t) in prevs]     # 2..
+                        ))
+                app.msg_status_alt(f(_('Backup dir: {}'), sv_dir), 0)
+    #           app.msg_status('')
+                if None is what or 1==what:
+                    return
         pass;                  #log('what={}'.format(what))
         pass;                  #return
-        if prevs and what>1:
+        if opdf and prevs and what>1:
             # Compare
             pass;              #log('what={}'.format(what))
             old_path    = sv_dir + os.sep + prevs[what-2][1][0]
@@ -408,12 +410,14 @@ class Command:
         if vrn_num==0 and len(vrn_data)==0:
             vrn_data['wher']    = self.def_wher
             vrn_data['mask']    = self.def_mask
+            vrn_data['opdf']    = self.def_opdf
             vrn_data['diff']    = self.def_diff
             vrn_data['dfmx']    = self.def_dfmx
             vrn_data['svon']    = self.def_svon
             vrn_data['whon']    = self.def_whon
             vrn_data['maon']    = self.def_maon
         vds     = vrn_data.copy()
+        vds.setdefault('opdf', self.def_opdf)
         vds.setdefault('diff', self.def_diff)
         vds.setdefault('dfsh', self.def_dfsh)
         vds.setdefault('dfmx', self.def_dfmx)
@@ -445,6 +449,8 @@ class Command:
             whon_l  = [s for s in stores['whon_hist'] if s]
             maon_l  = [s for s in stores['maon_hist'] if s]
 
+
+            opdf    = vds['opdf']
             # vds -> vals
             vals    = dict(wher=vds['wher']
                           ,mask=vds['mask']
@@ -459,6 +465,7 @@ class Command:
                 dma_path= get_bk_path(cf_path, vals['wher'], vals['mask'])
                 vals.update(dict(
                            d4ma=dma_path
+                          ,opdf=opdf
                           ,diff=vds['diff']
                           ,dfsh=vds['dfsh']
                           ,dfmx=vds['dfmx']
@@ -469,6 +476,7 @@ class Command:
                 dmo_path= get_bk_path(cf_path, vals['whon'], vals['maon'])
                 vals.update(dict(
                            d4ma=dma_path
+                          ,opdf=opdf
                           ,diff=vds['diff']
                           ,dfsh=vds['dfsh']
                           ,dfmx=vds['dfmx']
@@ -484,7 +492,12 @@ class Command:
             DLGH,DLGW   = DLG_H+  g1+g2, DLG_W
             pass;              #LOG and log('vals={}',(vals))
             cnts=([]
-                 +[dict(cid='lbtp',tp='lb'  ,t=  5      ,l=5+120    ,w=180  ,cap=_('Options for manual backup and compare')     )] # 
+                    +([] 
+                 +[dict(           tp='lb'  ,t=  5      ,l=5+120    ,w=180  ,cap=_('Options for manual backup')                 )] # 
+                    if not adva else []                        
+                 +[dict(           tp='lb'  ,tid='opdf' ,l=5+120    ,w=180  ,cap=_('Options for manual backup')                 )] # 
+                 +[dict(cid='opdf',tp='ch'  ,t=  3      ,l=5+300    ,w=170  ,cap='and to c&ompare'              ,act=1          )] # &o
+                    )
                  +[dict(           tp='lb'  ,tid='wher' ,l=5        ,w=120  ,cap=_('Copy to &dir:')                             )] # &d 
                  +[dict(cid='wher',tp='cb'  ,t= 25      ,l=5+120    ,w=500  ,items=wher_l                                       )] #
                  +[dict(cid='v4wh',tp='bt'  ,tid='wher' ,l=5+120+500,w= 80  ,cap=_('Add &var')                                  )] # &v 
@@ -494,14 +507,14 @@ class Command:
                  +[dict(cid='v4ma',tp='bt'  ,tid='mask' ,l=5+120+500,w= 80  ,cap=_('Add v&ar')                                  )] # &a 
                  +[dict(cid='c4ma',tp='bt'  ,tid='mask' ,l=5+620+ 80,w= 80  ,cap=_('&Presets')                                  )] # &p
                     +([] if not adva else []                        
-                 +[dict(           tp='lb'  ,tid='d4ma' ,l=5        ,w=120  ,cap=_('Demo: ')                                    )] # 
-                 +[dict(cid='d4ma',tp='ed'  ,t= 85      ,l=5+120    ,w=580                                      ,props='1,0,1'  )] #     ro,mono,brd
-                 +[dict(cid='u4ma',tp='bt'  ,tid='d4ma' ,l=5+120+580,w= 80  ,cap=_('&Update')                                   )] #  
-                 +[dict(           tp='lb'  ,tid='diff' ,l=5        ,w=120  ,cap=_('Di&ff command:'),hint=diff_h                )] # &f 
-                 +[dict(cid='diff',tp='cb'  ,t=115      ,l=5+120    ,w=400  ,items=diff_l                                       )] #
-                 +[dict(cid='dfsh',tp='ch'  ,tid='diff' ,l=5+520+ 10,w= 90  ,cap='Shell'                                        )] # &t
-                 +[dict(           tp='lb'  ,tid='diff' ,l=5+630    ,w=100  ,cap=_('Ma&x shown:')   ,hint=dfmx_h                )] # &x
-                 +[dict(cid='dfmx',tp='sp-ed',tid='diff',l=5+630+100,w= 50                                      ,props='0,20,1' )] #
+                 +[dict(           tp='lb'  ,tid='d4ma' ,l=5        ,w=120  ,cap=_('Demo: ')                    ,en=opdf        )] # 
+                 +[dict(cid='d4ma',tp='ed'  ,t= 85      ,l=5+120    ,w=580                              ,en=opdf,props='1,0,1'  )] #     ro,mono,brd
+                 +[dict(cid='u4ma',tp='bt'  ,tid='d4ma' ,l=5+120+580,w= 80  ,cap=_('&Update')                   ,en=opdf        )] #  
+                 +[dict(           tp='lb'  ,tid='diff' ,l=5        ,w=120  ,cap=_('Di&ff command:'),hint=diff_h,en=opdf        )] # &f 
+                 +[dict(cid='diff',tp='cb'  ,t=115      ,l=5+120    ,w=400  ,items=diff_l                       ,en=opdf        )] #
+                 +[dict(cid='dfsh',tp='ch'  ,tid='diff' ,l=5+520+ 10,w= 90  ,cap='Shell'                        ,en=opdf        )] # &t
+                 +[dict(           tp='lb'  ,tid='diff' ,l=5+630    ,w=100  ,cap=_('Ma&x shown:')   ,hint=dfmx_h,en=opdf        )] # &x
+                 +[dict(cid='dfmx',tp='sp-ed',tid='diff',l=5+630+100,w= 50                              ,en=opdf,props='0,20,1' )] #
                     )
                  +[dict(           tp='--'  ,t=140+g1   ,l=0                                                                    )] # 
                  +[dict(cid='svon',tp='ch'  ,t=155+g1   ,l=5+120    ,w=290  ,cap=svon_c                         ,act=1          )] # &t
@@ -534,7 +547,7 @@ class Command:
             if aid is None or aid=='-':    return#while True
             pass;              #LOG and log('vals={}',(vals))
             
-            vds.update({k:v for (k,v) in vals.items() if k in ('wher', 'mask', 'diff', 'dfsh', 'dfmx', 'svon', 'whon', 'maon')})
+            vds.update({k:v for (k,v) in vals.items() if k in ('wher', 'mask', 'opdf', 'diff', 'dfsh', 'dfmx', 'svon', 'whon', 'maon')})
             if aid=='more':
                 adva    = not adva
             if aid=='?':
@@ -580,6 +593,7 @@ class Command:
                 elif vrn_act=='add':               # Add
                     all_vrns   += [{'wher': '',
                                     'mask': '',
+                                    'opdf': False,
                                     'diff': '',
                                     'dfsh': False,
                                     'dfmx': 0,
@@ -607,7 +621,7 @@ class Command:
                           ,'b4wo':'whon'}[aid]
                 vals[id]= fold
                 fid     = id
-                vds.update({k:v for (k,v) in vals.items() if k in ('wher', 'mask', 'diff', 'dfsh', 'dfmx', 'svon', 'whon', 'maon')})
+                vds.update({k:v for (k,v) in vals.items() if k in ('wher', 'mask', 'opdf', 'diff', 'dfsh', 'dfmx', 'svon', 'whon', 'maon')})
 
             if aid in ('v4wh', 'v4ma', 'v4wo', 'v4mo'):
                 prms_l  =([]
@@ -649,7 +663,7 @@ class Command:
                           ,'v4mo':'maon'}[aid]
                 vals[id]+= prms_l[prm_i].split('\t')[0].strip()
                 fid     = id
-                vds.update({k:v for (k,v) in vals.items() if k in ('wher', 'mask', 'diff', 'dfsh', 'dfmx', 'svon', 'whon', 'maon')})
+                vds.update({k:v for (k,v) in vals.items() if k in ('wher', 'mask', 'opdf', 'diff', 'dfsh', 'dfmx', 'svon', 'whon', 'maon')})
                 
             if aid == 'c4ma':
                 rds_l   =([]
@@ -662,7 +676,7 @@ class Command:
                 if rd_i is None:   continue
                 vals['mask']= rds_l[rd_i].split('\t')[1]
                 fid     = 'mask'
-                vds.update({k:v for (k,v) in vals.items() if k in ('wher', 'mask', 'diff', 'dfsh', 'dfmx', 'svon', 'whon', 'maon')})
+                vds.update({k:v for (k,v) in vals.items() if k in ('wher', 'mask', 'opdf', 'diff', 'dfsh', 'dfmx', 'svon', 'whon', 'maon')})
             
             if aid == 'c4mo':
                 rds_l   =([]
@@ -677,7 +691,7 @@ class Command:
                 if rd_i is None:   continue
                 vals['maon']= rds_l[rd_i].split('\t')[1]
                 fid     = 'maon'
-                vds.update({k:v for (k,v) in vals.items() if k in ('wher', 'mask', 'diff', 'dfsh', 'dfmx', 'svon', 'whon', 'maon')})
+                vds.update({k:v for (k,v) in vals.items() if k in ('wher', 'mask', 'opdf', 'diff', 'dfsh', 'dfmx', 'svon', 'whon', 'maon')})
             
             if aid=='!':
                 if not vals['wher'].strip():
@@ -722,6 +736,7 @@ class Command:
         self.def_svon   = False
         self.def_whon   = r'{FILE_DIR}'+os.sep+'bk'
         self.def_maon   = '{FILE_STEM}.{COUNTER|w:3}.{FILE_EXT}'
+        self.def_opdf   = False
         self.def_diff   = r'"c:\Program Files (x86)\WinMerge\WinMergeU.exe" "{COPY_PATH}" "{FILE_PATH}"' \
                             if os.name=='nt' else \
                           r'diff -u "{COPY_PATH}" "{FILE_PATH}"'
