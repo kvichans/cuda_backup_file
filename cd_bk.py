@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '0.8.5 2017-02-05'
+    '0.9.1 2017-02-05'
 ToDo: (see end of file)
 '''
 
@@ -423,7 +423,7 @@ class Command:
         vds.setdefault('dfmx', self.def_dfmx)
 
         DLG_W,  \
-        DLG_H   = 790, 340
+        DLG_H   = 800, 340
         svon_c  = _('Au&to-create backup before each saving')
         v4wo_h  = _('Insert macro')
         b4wo_h  = _('Browse dir')
@@ -493,55 +493,55 @@ class Command:
             pass;              #LOG and log('vals={}',(vals))
             cnts=([]
                     +([] 
-                 +[dict(           tp='lb'  ,t=  5      ,l=5+120    ,w=180  ,cap=_('Options for manual backup')                 )] # 
+                 +[dict(           tp='lb'  ,t=  5      ,l=5+120        ,w=180  ,cap=_('Options for manual backup')                 )] # 
                     if not adva else []                        
-                 +[dict(           tp='lb'  ,tid='opdf' ,l=5+120    ,w=180  ,cap=_('Options for manual backup')                 )] # 
-                 +[dict(cid='opdf',tp='ch'  ,t=  3      ,l=5+300    ,w=170  ,cap='and to c&ompare'              ,act=1          )] # &o
+                 +[dict(           tp='lb'  ,tid='opdf' ,l=5+120        ,w=180  ,cap=_('Options for manual backup')                 )] # 
+                 +[dict(cid='opdf',tp='ch'  ,t=  3      ,l=5+400        ,w=170  ,cap='and to c&ompare'              ,act=1          )] # &o
                     )
-                 +[dict(           tp='lb'  ,tid='wher' ,l=5        ,w=120  ,cap=_('Copy to &dir:')                             )] # &d 
-                 +[dict(cid='wher',tp='cb'  ,t= 25      ,l=5+120    ,w=500  ,items=wher_l                                       )] #
-                 +[dict(cid='v4wh',tp='bt'  ,tid='wher' ,l=5+120+500,w= 80  ,cap=_('Add &var')                                  )] # &v 
-                 +[dict(cid='b4wh',tp='bt'  ,tid='wher' ,l=5+620+ 80,w= 35  ,cap=_('…')                                         )] #  
-                 +[dict(           tp='lb'  ,tid='mask' ,l=5        ,w=120  ,cap=_('Planned &name:')                            )] # &n 
-                 +[dict(cid='mask',tp='cb'  ,t= 55      ,l=5+120    ,w=500  ,items=mask_l                                       )] #
-                 +[dict(cid='v4ma',tp='bt'  ,tid='mask' ,l=5+120+500,w= 80  ,cap=_('Add v&ar')                                  )] # &a 
-                 +[dict(cid='c4ma',tp='bt'  ,tid='mask' ,l=5+620+ 80,w= 80  ,cap=_('&Presets')                                  )] # &p
+                 +[dict(           tp='lb'  ,tid='wher' ,l=5            ,w=120  ,cap=_('Copy to &dir:')                             )] # &d 
+                 +[dict(cid='wher',tp='cb'  ,t= 25      ,l=5+120        ,w=500  ,items=wher_l                                       )] #
+                 +[dict(cid='v4wh',tp='bt'  ,tid='wher' ,l=5+120+500+ 5 ,w= 80  ,cap=_('Add &var')                                  )] # &v 
+                 +[dict(cid='b4wh',tp='bt'  ,tid='wher' ,l=5+620+ 80+10 ,w= 35  ,cap=_('…')                                         )] #  
+                 +[dict(           tp='lb'  ,tid='mask' ,l=5            ,w=120  ,cap=_('Planned &name:')                            )] # &n 
+                 +[dict(cid='mask',tp='cb'  ,t= 55      ,l=5+120        ,w=500  ,items=mask_l                                       )] #
+                 +[dict(cid='v4ma',tp='bt'  ,tid='mask' ,l=5+120+500+ 5 ,w= 80  ,cap=_('Add v&ar')                                  )] # &a 
+                 +[dict(cid='c4ma',tp='bt'  ,tid='mask' ,l=5+620+ 80+10 ,w= 80  ,cap=_('&Presets')                                  )] # &p
                     +([] if not adva else []                        
-                 +[dict(           tp='lb'  ,tid='d4ma' ,l=5        ,w=120  ,cap=_('Demo: ')                    ,en=opdf        )] # 
-                 +[dict(cid='d4ma',tp='ed'  ,t= 85      ,l=5+120    ,w=580                              ,en=opdf,props='1,0,1'  )] #     ro,mono,brd
-                 +[dict(cid='u4ma',tp='bt'  ,tid='d4ma' ,l=5+120+580,w= 80  ,cap=_('&Update')                   ,en=opdf        )] #  
-                 +[dict(           tp='lb'  ,tid='diff' ,l=5        ,w=120  ,cap=_('Di&ff command:'),hint=diff_h,en=opdf        )] # &f 
-                 +[dict(cid='diff',tp='cb'  ,t=115      ,l=5+120    ,w=400  ,items=diff_l                       ,en=opdf        )] #
-                 +[dict(cid='dfsh',tp='ch'  ,tid='diff' ,l=5+520+ 10,w= 90  ,cap='Shell'                        ,en=opdf        )] # &t
-                 +[dict(           tp='lb'  ,tid='diff' ,l=5+630    ,w=100  ,cap=_('Ma&x shown:')   ,hint=dfmx_h,en=opdf        )] # &x
-                 +[dict(cid='dfmx',tp='sp-ed',tid='diff',l=5+630+100,w= 50                              ,en=opdf,props='0,20,1' )] #
+                 +[dict(           tp='lb'  ,tid='d4ma' ,l=5            ,w=120  ,cap=_('Demo: ')                    ,en=opdf        )] # 
+                 +[dict(cid='d4ma',tp='ed'  ,t= 85      ,l=5+120        ,w=580+5                            ,en=opdf,props='1,0,1'  )] #     ro,mono,brd
+                 +[dict(cid='u4ma',tp='bt'  ,tid='d4ma' ,l=5+120+580+10 ,w= 80  ,cap=_('&Update')                   ,en=opdf        )] #  
+                 +[dict(           tp='lb'  ,tid='diff' ,l=5            ,w=120  ,cap=_('Di&ff command:'),hint=diff_h,en=opdf        )] # &f 
+                 +[dict(cid='diff',tp='cb'  ,t=115      ,l=5+120        ,w=400  ,items=diff_l                       ,en=opdf        )] #
+                 +[dict(cid='dfsh',tp='ch'  ,tid='diff' ,l=5+520+ 30    ,w= 90  ,cap='Shell'                        ,en=opdf        )] # &t
+                 +[dict(           tp='lb'  ,tid='diff' ,l=5+640        ,w=100  ,cap=_('Ma&x shown:')   ,hint=dfmx_h,en=opdf        )] # &x
+                 +[dict(cid='dfmx',tp='sp-ed',tid='diff',l=5+630+100+10 ,w= 50                              ,en=opdf,props='0,20,1' )] #
                     )
-                 +[dict(           tp='--'  ,t=140+g1   ,l=0                                                                    )] # 
-                 +[dict(cid='svon',tp='ch'  ,t=155+g1   ,l=5+120    ,w=290  ,cap=svon_c                         ,act=1          )] # &t
+                 +[dict(           tp='--'  ,t=140+g1   ,l=0                                                                        )] # 
+                 +[dict(cid='svon',tp='ch'  ,t=155+g1   ,l=5+120        ,w=290  ,cap=svon_c                         ,act=1          )] # &t
                     +([] if not vds['svon'] else []                        
-                 +[dict(           tp='lb'  ,tid='whon' ,l=5        ,w=120  ,cap=_('Copy to d&ir:')                             )] # &i
-                 +[dict(cid='whon',tp='cb'  ,t=175+g1   ,l=5+120    ,w=500  ,items=whon_l                                       )] #
-                 +[dict(cid='v4wo',tp='bt'  ,tid='whon' ,l=5+120+500,w= 80  ,cap=_('Add va&r')  ,hint=v4wo_h                    )] # &r
-                 +[dict(cid='b4wo',tp='bt'  ,tid='whon' ,l=5+620+80 ,w= 35  ,cap=_('…')         ,hint=b4wo_h                    )] #  
-                 +[dict(           tp='lb'  ,tid='maon' ,l=5        ,w=120  ,cap=_('Copy with na&me:')                          )] # &m
-                 +[dict(cid='maon',tp='cb'  ,t=205+g1   ,l=5+120    ,w=500  ,items=maon_l                                       )] #
-                 +[dict(cid='v4mo',tp='bt'  ,tid='maon' ,l=5+120+500,w= 80  ,cap=_('Ad&d var')  ,hint=v4mo_h                    )] # &d
-                 +[dict(cid='c4mo',tp='bt'  ,tid='maon' ,l=5+620+80 ,w= 80  ,cap=_('Pre&sets')                                  )] # &s
+                 +[dict(           tp='lb'  ,tid='whon' ,l=5            ,w=120  ,cap=_('Copy to d&ir:')                             )] # &i
+                 +[dict(cid='whon',tp='cb'  ,t=175+g1   ,l=5+120        ,w=500  ,items=whon_l                                       )] #
+                 +[dict(cid='v4wo',tp='bt'  ,tid='whon' ,l=5+120+500+ 5 ,w= 80  ,cap=_('Add va&r')  ,hint=v4wo_h                    )] # &r
+                 +[dict(cid='b4wo',tp='bt'  ,tid='whon' ,l=5+620+80 +10 ,w= 35  ,cap=_('…')         ,hint=b4wo_h                    )] #  
+                 +[dict(           tp='lb'  ,tid='maon' ,l=5            ,w=120  ,cap=_('Copy with na&me:')                          )] # &m
+                 +[dict(cid='maon',tp='cb'  ,t=205+g1   ,l=5+120        ,w=500  ,items=maon_l                                       )] #
+                 +[dict(cid='v4mo',tp='bt'  ,tid='maon' ,l=5+120+500+ 5 ,w= 80  ,cap=_('Ad&d var')  ,hint=v4mo_h                    )] # &d
+                 +[dict(cid='c4mo',tp='bt'  ,tid='maon' ,l=5+620+80 +10 ,w= 80  ,cap=_('Pre&sets')                                  )] # &s
                     +([] if not adva else []                        
-                 +[dict(           tp='lb'  ,tid='d4mo' ,l=5        ,w=120  ,cap=_('Demo: ')                                    )] # 
-                 +[dict(cid='d4mo',tp='ed'  ,t=235      ,l=5+120    ,w=580                                      ,props='1,0,1'  )] #     ro,mono,brd
-                 +[dict(cid='u4mo',tp='bt'  ,tid='d4mo' ,l=5+120+580,w= 80  ,cap=_('&Update')                                   )] #  
+                 +[dict(           tp='lb'  ,tid='d4mo' ,l=5            ,w=120  ,cap=_('Demo: ')                                    )] # 
+                 +[dict(cid='d4mo',tp='ed'  ,t=235      ,l=5+120        ,w=580+5                                    ,props='1,0,1'  )] #     ro,mono,brd
+                 +[dict(cid='u4mo',tp='bt'  ,tid='d4mo' ,l=5+120+580+10 ,w= 80  ,cap=_('&Update')                                   )] #  
                     )
                     )
-                 +[dict(           tp='--'  ,t=DLGH-45  ,l=0                                                                    )] # 
-                 +[dict(cid='more',tp='bt'  ,t=DLGH-30  ,l=5        ,w=100  ,cap=_('L&ess <<') if adva else _('Mor&e >>')       )] # &e
+                 +[dict(           tp='--'  ,t=DLGH-45  ,l=0                                                                        )] # 
+                 +[dict(cid='more',tp='bt'  ,t=DLGH-30  ,l=5            ,w=100  ,cap=_('L&ess <<') if adva else _('Mor&e >>')       )] # &e
                     +([] if not adva else []                        
-                 +[dict(           tp='lb'  ,tid='-'    ,l=5+120    ,w= 80  ,cap=_('Variant&:')                                 )] # &:
-                 +[dict(cid='vrns',tp='cb-ro',tid='-'   ,l=5+120+ 80,w=160  ,items=vrns_l                       ,act=1          )] #
+                 +[dict(           tp='lb'  ,tid='-'    ,l=5+120        ,w= 80  ,cap=_('Variant&:')                                 )] # &:
+                 +[dict(cid='vrns',tp='cb-ro',tid='-'   ,l=5+120+ 80    ,w=160  ,items=vrns_l                       ,act=1          )] #
                     )
-                 +[dict(cid='?'   ,tp='bt'  ,tid='-'    ,l=DLGW-245 ,w=80   ,cap=_('&Help')                                     )] # &h
-                 +[dict(cid='!'   ,tp='bt'  ,tid='-'    ,l=DLGW-165 ,w=80   ,cap=_('OK')                        ,props='1'      )] #     default
-                 +[dict(cid='-'   ,tp='bt'  ,t=DLGH-30  ,l=DLGW-85  ,w=80   ,cap=_('Cancel')                                    )] #  
+                 +[dict(cid='?'   ,tp='bt'  ,tid='-'    ,l=DLGW-260     ,w=80   ,cap=_('&Help')                                     )] # &h
+                 +[dict(cid='!'   ,tp='bt'  ,tid='-'    ,l=DLGW-175     ,w=80   ,cap=_('OK')                        ,props='1'      )] #     default
+                 +[dict(cid='-'   ,tp='bt'  ,t=DLGH-30  ,l=DLGW-90      ,w=80   ,cap=_('Cancel')                                    )] #  
                 )#NOTE: cfg
             aid, vals,fid,chds = dlg_wrapper(f(_('Configure "Backup File" ({})'), VERSION_V), DLGW, DLGH, cnts, vals, focus_cid=fid)
             if aid is None or aid=='-':    return#while True
