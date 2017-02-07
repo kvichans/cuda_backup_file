@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '0.9.1 2017-02-05'
+    '0.9.8 2017-02-07'
 ToDo: (see end of file)
 '''
 
@@ -25,25 +25,29 @@ _   = get_translation(__file__) # I18N
 VERSION     = re.split('Version:', __doc__)[1].split("'")[1]
 VERSION_V,  \
 VERSION_D   = VERSION.split(' ')
-sDiffExe    = r'c:\Program Files (x86)\WinMerge\WinMergeU.exe'
-nMaxBks     = 9
+
+CFG_JSON    = CdSw.get_setting_dir()+os.sep+'cuda_backup_file.json'
+#CFG_JSON   = app.app_path(app.APP_DIR_SETTINGS)+os.sep+'cuda_backup_file.json'
+MAX_HIST    = CdSw.get_opt('ui_max_history_edits', 20)
+#MAX_HIST   = apx.get_opt('ui_max_history_edits', 20)
+
+DEMO_PATH   = 'demo'+os.sep+'path'+os.sep+'demofilename.demoext'
 
 
-with_proj_man   = False
 get_proj_vars   = lambda:{}
-try:
-    import cuda_project_man
-    def get_proj_vars():
-        prj_vars = cuda_project_man.project_variables()
-        if prj_vars.get('ProjDir', ''):
-            # Project loaded
-            return prj_vars
-        return {}
-    test    = get_proj_vars()
-    with_proj_man   = True
-except:
-    pass;                      #LOG and log('No proj vars',())
-    get_proj_vars   = lambda:{}
+if app.__name__=='cudatext':
+    try:
+        import cuda_project_man
+        def get_proj_vars():
+            prj_vars = cuda_project_man.project_variables()
+            if prj_vars.get('ProjDir', ''):
+                # Project loaded
+                return prj_vars
+            return {}
+        test    = get_proj_vars()
+    except:
+        pass;                      #LOG and log('No proj vars',())
+        get_proj_vars   = lambda:{}
 
 
 def parent(s, level=1):
@@ -204,10 +208,6 @@ def get_bk_path(path:str, dr_mask:str, fn_mask:str, ops='')->str:
 #   return bk_path.strip(os.sep)
    #def get_bk_path
 
-CFG_JSON    = app.app_path(app.APP_DIR_SETTINGS)+os.sep+'cuda_backup_file.json'
-DEMO_PATH   = 'demo'+os.sep+'path'+os.sep+'demofilename.demoext'
-MAX_HIST    = apx.get_opt('ui_max_history_edits', 20)
-
 def save_cfg(stores):
     open(CFG_JSON, 'w').write(json.dumps(stores, indent=4))
 def load_cfg(modify=False, ops=''):
@@ -257,7 +257,7 @@ class Command:
             except:
                 app.msg_status(f(_('Cannot create dir "{}"'), sv_dir))
                 return
-        prevs   = ()
+        prevs_a = ()
         files   = list(os.walk(sv_dir))[0][2]
         mask    = vrn_data['mask']
         pass;                   LOG and log('mask={}',(mask))
@@ -265,57 +265,74 @@ class Command:
         cf_fn   = os.path.split(cf_path)
         cf_stem,\
         cf_ext  = cf_fn.rsplit('.', 1) + ([] if '.' in cf_fn else [''])
-        mask    = mask.replace('{FILE_STEM}', cf_stem)
-        mask    = mask.replace('{FILE_EXT}' , cf_ext)
-        mask    = mask.replace('{YY}'       , r'\d\d')
-        mask    = mask.replace('{YYYY}'     , r'\d\d\d\d')
-        mask    = mask.replace('{M}'        , r'\d')
-        mask    = mask.replace('{MM}'       , r'\d\d')
-        mask    = mask.replace('{MMM}'      , r'\w\w\w')
-        mask    = mask.replace('{D}'        , r'\d')
-        mask    = mask.replace('{DD}'       , r'\d\d')
-        mask    = mask.replace('{h}'        , r'\d')
-        mask    = mask.replace('{hh}'       , r'\d\d')
-        mask    = mask.replace('{m}'        , r'\d')
-        mask    = mask.replace('{mm}'       , r'\d\d')
-        mask    = mask.replace('{s}'        , r'\d')
-        mask    = mask.replace('{ss}'       , r'\d\d')
-        mask    = re.sub(r'([^}]){MMMM}([^{])'          , r'\1\\w+\2', mask)
-        mask    = re.sub(r'([^}]){COUNTER[^}]*}([^{])'  , r'\1\\d+\2', mask)
+        if mask.startswith('{FILE_STEM}') and \
+           mask.endswith(  '.{FILE_EXT}'):
+            mask    = re.escape(cf_stem) + r'.*\.' + re.escape(cf_ext)
+        else:
+            mask    = mask.replace('.'              , r'\.')
+            mask    = mask.replace('{FILE_STEM}'    ,         re.escape(cf_stem))
+            mask    = mask.replace(r'\.{FILE_EXT}'  , r'.*\.'+re.escape(cf_ext))
+            mask    = mask.replace('{FILE_EXT}'     ,         re.escape(cf_ext))
+            mask    = mask.replace('{YY}'           , r'\d\d')
+            mask    = mask.replace('{YYYY}'         , r'\d\d\d\d')
+            mask    = mask.replace('{M}'            , r'\d')
+            mask    = mask.replace('{MM}'           , r'\d\d')
+            mask    = mask.replace('{MMM}'          , r'\w\w\w')
+            mask    = mask.replace('{D}'            , r'\d')
+            mask    = mask.replace('{DD}'           , r'\d\d')
+            mask    = mask.replace('{h}'            , r'\d')
+            mask    = mask.replace('{hh}'           , r'\d\d')
+            mask    = mask.replace('{m}'            , r'\d')
+            mask    = mask.replace('{mm}'           , r'\d\d')
+            mask    = mask.replace('{s}'            , r'\d')
+            mask    = mask.replace('{ss}'           , r'\d\d')
+            mask    = re.sub(r'([^}]){MMMM}([^{])'          , r'\1\\w+\2', mask)
+            mask    = re.sub(r'([^}]){COUNTER[^}]*}([^{])'  , r'\1\\d+\2', mask)
         pass;                   LOG and log('mask={}',(mask))
         re_mask = re.compile('^'+mask+'$')
 
         opdf    = vrn_data.get('opdf', self.def_opdf)
         if opdf:
-            prevs   = list( (f, os.path.getmtime(sv_dir+os.sep+f)) 
+            prevs_a = list( (f, os.path.getmtime(sv_dir+os.sep+f)) 
                             for f in files 
                             if re_mask.match(f)
                         )
-            pass;                  #log('prevs={}', prevs)
+            pass;              #log('prevs_a={}', prevs_a)
+            prevs_a = sorted(prevs_a, key=lambda ft: ft[1], reverse=True)
+            prevs_a = list(zip(itertools.count(1), prevs_a))
             dfmx    = vrn_data.get('dfmx', self.def_dfmx)
-            prevs   = sorted(prevs, key=lambda ft: ft[1], reverse=True)
-            prevs   = list(zip(itertools.count(1), prevs))
-            prevs   = prevs[:dfmx] if dfmx else prevs
+            prevs   = prevs_a[:dfmx] if dfmx else prevs_a
             pass;                  #log('prevs={}', prevs)
+            what_p  = -1
             if prevs:
-                app.msg_status_alt(f(_('Backup dir: {}'), sv_dir), 60)
-    #           app.msg_status(f(_('Backup dir: {}'), sv_dir))
-                what    = app.dlg_menu(app.MENU_LIST
-                        , '\n'.join(
-                        [    f(_('Copy to…\t"{}"'), sv_fn)                          # 0
-                        ]+[  '-----------'                                          # 1
-                        ]+[  f(_('Diff with\t"{}"'), fn) for n,(fn,t) in prevs]     # 2..
-                        ))
-                app.msg_status_alt(f(_('Backup dir: {}'), sv_dir), 0)
-    #           app.msg_status('')
-                if None is what or 1==what:
-                    return
+                for one_two in range(2):
+                    CdSw.msg_status_alt(f(_('Backup dir: {}'), sv_dir), 60)
+        #           app.msg_status(f(_('Backup dir: {}'), sv_dir))
+                    menu_l  =([  f(_('Copy to…\t{}'), sv_fn)                        ]     # 0
+                            + [  ':::::::::::'                                      ]     # skip
+                            + [  f(_('Diff with\t{}'), fn) for n,(fn,t) in prevs    ]     # 2..
+                            +([] if len(prevs_a)==len(prevs) else []
+                            + [  _('more…')+f('\t({})',len(prevs_a)-len(prevs))     ]     # all
+                            ))
+                    what_m  = CdSw.dlg_menu(CdSw.MENU_LIST, '\n'.join(menu_l))
+                    CdSw.msg_status_alt('', 0)
+        #           app.msg_status('')
+                    if None is what_m or menu_l[what_m]==':::::::::::':
+                        return
+                    if 0==what_m:
+                        what_p  = -1
+                        break
+                    if menu_l[what_m].startswith(_('more…')):
+                        prevs   = prevs_a
+                        continue
+                    what_p  = what_m - 2 
+                    break
         pass;                  #log('what={}'.format(what))
         pass;                  #return
-        if opdf and prevs and what>1:
+        if opdf and prevs and what_p!=-1:
             # Compare
             pass;              #log('what={}'.format(what))
-            old_path    = sv_dir + os.sep + prevs[what-2][1][0]
+            old_path    = sv_dir + os.sep + prevs[what_p][1][0]
             diff        = vrn_data['diff']
             diff        = diff.replace('{BACKUP_PATH}'  , old_path)
             diff        = diff.replace('{COPY_PATH}'    , old_path)
@@ -323,15 +340,13 @@ class Command:
             diff        = diff.replace('{FILE_PATH}'    , cf_path)
             pass;               LOG and log('diff={}', (diff))
             subprocess.Popen(diff, shell=vrn_data['dfsh'])
-    #       subprocess.Popen(f('{} {} {}',sDiffExe, cf_path, old_path))
-    #       subprocess.Popen((sDiffExe, cf_path, old_path))
             return
         
         # Copy
         while True:
-            app.msg_status_alt(f(_('Backup dir: {}'), sv_dir), 60)
+            CdSw.msg_status_alt(f(_('Backup dir: {}'), sv_dir), 60)
             sv_fn    = app.dlg_input(_('Create backup with name'), sv_fn)
-            app.msg_status_alt('', 0)
+            CdSw.msg_status_alt('', 0)
             if sv_fn is None or 0==len(sv_fn): return
             if not os.path.isfile(sv_dir+os.sep+sv_fn):
                 break#while
@@ -362,19 +377,19 @@ class Command:
         sv_fn   = os.path.split(sv_path)
         if not os.path.isdir(sv_dir):
             if re.search(r'{\w+}', sv_dir):
-                app.msg_status_alt(f(_('Cannot create backup copy: invalid dir "{}"'), sv_dir), 6)
+                CdSw.msg_status_alt(f(_('Cannot create backup copy: invalid dir "{}"'), sv_dir), 6)
                 return
             try:
                 os.makedirs(sv_dir)
             except:
-                app.msg_status_alt(f(_('Cannot create backup copy: invalid dir "{}"'), sv_dir), 6)
+                CdSw.msg_status_alt(f(_('Cannot create backup copy: invalid dir "{}"'), sv_dir), 6)
                 return
         try:
             shutil.copyfile(cf_path, sv_path)
         except:
-            app.msg_status_alt(f(_('Cannot create backup copy: invalid path "{}"'), sv_path), 6)
+            CdSw.msg_status_alt(f(_('Cannot create backup copy: invalid path "{}"'), sv_path), 6)
             return
-        app.msg_status_alt(f(_('Create backup: {}'), sv_path), 3)
+        CdSw.msg_status_alt(f(_('Create backup: {}'), sv_path), 3)
         pass;                   LOG and log('ok',())
        #def on_save_pre
 
@@ -615,7 +630,7 @@ class Command:
                     continue
             
             if aid in ('b4wh', 'b4wo'):
-                fold    = app.dlg_dir('')
+                fold    = CdSw.dlg_dir('')
                 if fold is None:   continue
                 id      = {'b4wh':'wher'
                           ,'b4wo':'whon'}[aid]
@@ -654,8 +669,8 @@ class Command:
                         )
                 prms_l +=['{'+pj_k+'}             \t'+pj_v 
                             for pj_k, pj_v in get_proj_vars().items()]
-#               prm_i   = app.dlg_menu(app.MENU_LIST, '\n'.join(prms_l))
-                prm_i   = app.dlg_menu(app.MENU_LIST_ALT, '\n'.join(prms_l))
+#               prm_i   = CdSw.dlg_menu(CdSw.MENU_LIST, '\n'.join(prms_l))
+                prm_i   = CdSw.dlg_menu(CdSw.MENU_LIST_ALT, '\n'.join(prms_l))
                 if prm_i is None:   continue
                 id      = {'v4wh':'wher'
                           ,'v4ma':'mask'
@@ -672,7 +687,7 @@ class Command:
                         +[_('name_2017-12-31_23-59-59.ext\t{FILE_STEM}_{YYYY}-{MM}-{DD}_{hh}-{mm}-{ss}.{FILE_EXT}')]
                         +[_('name.25jan17-001.ext\t{FILE_STEM}.{DD}{MMM}{YY}-{COUNTER|w:3}.{FILE_EXT}')]
                         )
-                rd_i    = app.dlg_menu(app.MENU_LIST_ALT, '\n'.join(rds_l))
+                rd_i    = CdSw.dlg_menu(CdSw.MENU_LIST_ALT, '\n'.join(rds_l))
                 if rd_i is None:   continue
                 vals['mask']= rds_l[rd_i].split('\t')[1]
                 fid     = 'mask'
@@ -687,7 +702,7 @@ class Command:
                         +[_('name.1.ext  name.2.ext  name.3.ext  name.1.ext …\t{FILE_STEM}.{COUNTER|lim:3}.{FILE_EXT}')]
                         +[_('name.01.ext … name.99.ext  name.01.ext …\t{FILE_STEM}.{COUNTER|lim:99|w:2}.{FILE_EXT}')]
                         )
-                rd_i    = app.dlg_menu(app.MENU_LIST_ALT, '\n'.join(rds_l))
+                rd_i    = CdSw.dlg_menu(CdSw.MENU_LIST_ALT, '\n'.join(rds_l))
                 if rd_i is None:   continue
                 vals['maon']= rds_l[rd_i].split('\t')[1]
                 fid     = 'maon'

@@ -12,8 +12,10 @@ ToDo: (see end of file)
 
 import  sys, os, gettext, logging, inspect
 from    time        import perf_counter
-import  cudatext        as app
-import  cudax_lib       as apx
+
+import  cudatext        as      app
+from    cudatext        import  ed
+import  cudax_lib       as      apx
 
 pass;                           # Logging
 pass;                           from pprint import pformat
@@ -325,7 +327,7 @@ def fit_top_by_env(what_tp, base_tp='label'):
     fit4lb  = ENV2FITS.get(env, ENV2FITS.get('win'))
     fit     = 0
     if base_tp=='label':
-        fit = apx.get_opt('dlg_wrapper_fit_va_for_'+what_tp, fit4lb.get(what_tp, 0))
+        fit = CdSw.get_opt('dlg_wrapper_fit_va_for_'+what_tp, fit4lb.get(what_tp, 0))
     else:
         fit = fit_top_by_env(what_tp) - fit_top_by_env(base_tp)
     pass;                      #log('what_tp, base_tp, fit={}',(what_tp, base_tp, fit))
@@ -702,6 +704,45 @@ def get_hotkeys_desc(cmd_id, ext_id=None, keys_js=None, def_ans=''):
                        ]).strip('/')
     return desc
    #def get_hotkeys_desc
+
+class CdSw:
+    """ Proxy to use plugins both in cudatext and SunWrite"""
+
+    @staticmethod
+    def dlg_dir(init_dir):
+        if 'sw'==app.__name__:
+            return app.dlg_folder('', init_dir)
+        else:
+            return dlg_dir(init_dir)
+    
+    MENU_LIST     = 0
+    MENU_LIST_ALT = 1
+    @staticmethod
+    def dlg_menu(mid, text):
+        if 'sw'==app.__name__:
+            return app.dlg_menu(app.MENU_SIMPLE if mid==CdSw.MENU_LIST else app.MENU_DOUBLE, '', text)
+        else:
+            return app.dlg_menu(mid, text)
+    
+    @staticmethod
+    def msg_status_alt(msg, secs):
+        if 'sw'==app.__name__:
+            return app.msg_status(msg)
+        else:
+            return app.msg_status_alt(msg, secs)
+    
+    @staticmethod
+    def get_opt(path, def_value=None, lev='dulf', ed_cfg=ed):
+        if 'sw'==app.__name__:
+            return def_value
+        else:
+            return apx.get_opt(path, def_value, lev, ed_cfg)
+    
+    @staticmethod
+    def get_setting_dir():
+        return  app.app_ini_dir()       if 'sw'==app.__name__ else \
+                app.app_path(app.APP_DIR_SETTINGS)
+   #class CudSyn
 
 if __name__ == '__main__' :     # Tests
     pass
