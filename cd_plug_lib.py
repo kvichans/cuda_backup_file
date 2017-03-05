@@ -713,7 +713,7 @@ class CdSw:
         if 'sw'==app.__name__:
             return app.dlg_folder('', init_dir)
         else:
-            return dlg_dir(init_dir)
+            return app.dlg_dir(init_dir)
     
     MENU_LIST     = 0
     MENU_LIST_ALT = 1
