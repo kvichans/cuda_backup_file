@@ -16,7 +16,7 @@ from    .cd_plug_lib    import *
 
 OrdDict = collections.OrderedDict
 
-pass;                           LOG = (-2==-2)  # Do or dont logging.
+pass;                           LOG = (-2== 2)  # Do or dont logging.
 pass;                           from pprint import pformat
 pass;                           pf=lambda d:pformat(d,width=150)
 
