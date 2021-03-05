@@ -1,8 +1,8 @@
-﻿''' Plugin for CudaText editor
+''' Plugin for CudaText editor
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '0.9.8 2017-02-07'
+    '0.9.9 2021-03-03'
 ToDo: (see end of file)
 '''
 
@@ -360,7 +360,7 @@ class Command:
         except:
             app.msg_status(f(_('Cannot create backup copy: invalid path "{}"'), sv_dir+os.sep+sv_fn))
             return
-        app.msg_status('Copy to {}'.format(sv_dir+os.sep+sv_fn))
+        app.msg_status(_('Copy to {}').format(sv_dir+os.sep+sv_fn))
        #def copy_bk_or_compare
 
     def on_save_pre(self, ed_self):#NOTE: on_save_pre
@@ -511,7 +511,7 @@ class Command:
                  +[dict(           tp='lb'  ,t=  5      ,l=5+120        ,w=180  ,cap=_('Options for manual backup')                 )] # 
                     if not adva else []                        
                  +[dict(           tp='lb'  ,tid='opdf' ,l=5+120        ,w=180  ,cap=_('Options for manual backup')                 )] # 
-                 +[dict(cid='opdf',tp='ch'  ,t=  3      ,l=5+400        ,w=170  ,cap='and to c&ompare'              ,act=1          )] # &o
+                 +[dict(cid='opdf',tp='ch'  ,t=  3      ,l=5+400        ,w=170  ,cap=_('and to c&ompare')           ,act=1          )] # &o
                     )
                  +[dict(           tp='lb'  ,tid='wher' ,l=5            ,w=120  ,cap=_('Copy to &dir:')                             )] # &d 
                  +[dict(cid='wher',tp='cb'  ,t= 25      ,l=5+120        ,w=500  ,items=wher_l                                       )] #
@@ -527,7 +527,7 @@ class Command:
                  +[dict(cid='u4ma',tp='bt'  ,tid='d4ma' ,l=5+120+580+10 ,w= 80  ,cap=_('&Update')                   ,en=opdf        )] #  
                  +[dict(           tp='lb'  ,tid='diff' ,l=5            ,w=120  ,cap=_('Di&ff command:'),hint=diff_h,en=opdf        )] # &f 
                  +[dict(cid='diff',tp='cb'  ,t=115      ,l=5+120        ,w=400  ,items=diff_l                       ,en=opdf        )] #
-                 +[dict(cid='dfsh',tp='ch'  ,tid='diff' ,l=5+520+ 30    ,w= 90  ,cap='Shell'                        ,en=opdf        )] # &t
+                 +[dict(cid='dfsh',tp='ch'  ,tid='diff' ,l=5+520+ 30    ,w= 90  ,cap=_('Shell')                     ,en=opdf        )] # &t
                  +[dict(           tp='lb'  ,tid='diff' ,l=5+640        ,w=100  ,cap=_('Ma&x shown:')   ,hint=dfmx_h,en=opdf        )] # &x
                  +[dict(cid='dfmx',tp='sp-ed',tid='diff',l=5+630+100+10 ,w= 50                              ,en=opdf,props='0,20,1' )] #
                     )
@@ -812,7 +812,7 @@ Predefined filters for {COUNTER} are:
 ''')
     dlg_wrapper(_('Help'), GAP*2+600, GAP*3+25+650,
          [dict(cid='htx',tp='me'    ,t=GAP  ,h=650  ,l=GAP          ,w=600  ,props='1,1,1' ) #  ro,mono,border
-         ,dict(cid='-'  ,tp='bt'    ,t=GAP+650+GAP  ,l=GAP+600-90   ,w=90   ,cap='&Close'  )
+         ,dict(cid='-'  ,tp='bt'    ,t=GAP+650+GAP  ,l=GAP+600-90   ,w=90   ,cap=_('&Close')  )
          ], dict(htx=HELP_BODY), focus_cid='htx')
    #def dlg_help
 
