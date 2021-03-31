@@ -523,13 +523,13 @@ class Command:
                  +[dict(cid='c4ma',tp='bt'  ,tid='mask' ,l=5+620+ 80+10 ,w= 80  ,cap=_('&Presets')                                  )] # &p
                     +([] if not adva else []                        
                  +[dict(           tp='lb'  ,tid='d4ma' ,l=5            ,w=120  ,cap=_('Demo: ')                    ,en=opdf        )] # 
-                 +[dict(cid='d4ma',tp='ed'  ,t= 85      ,l=5+120        ,w=580+5                            ,en=opdf,props='1,0,1'  )] #     ro,mono,brd
+                 +[dict(cid='d4ma',tp='ed'  ,t= 85      ,l=5+120        ,w=580+5                            ,en=opdf, ex0='1', ex1='0', ex2='1'  )] #     ro,mono,brd
                  +[dict(cid='u4ma',tp='bt'  ,tid='d4ma' ,l=5+120+580+10 ,w= 80  ,cap=_('&Update')                   ,en=opdf        )] #  
                  +[dict(           tp='lb'  ,tid='diff' ,l=5            ,w=120  ,cap=_('Di&ff command:'),hint=diff_h,en=opdf        )] # &f 
                  +[dict(cid='diff',tp='cb'  ,t=115      ,l=5+120        ,w=400  ,items=diff_l                       ,en=opdf        )] #
                  +[dict(cid='dfsh',tp='ch'  ,tid='diff' ,l=5+520+ 30    ,w= 90  ,cap=_('Shell')                     ,en=opdf        )] # &t
                  +[dict(           tp='lb'  ,tid='diff' ,l=5+640        ,w=100  ,cap=_('Ma&x shown:')   ,hint=dfmx_h,en=opdf        )] # &x
-                 +[dict(cid='dfmx',tp='sp-ed',tid='diff',l=5+630+100+10 ,w= 50                              ,en=opdf,props='0,20,1' )] #
+                 +[dict(cid='dfmx',tp='sp-ed',tid='diff',l=5+630+100+10 ,w= 50                              ,en=opdf, ex0='0', ex1='20', ex2='1' )] #
                     )
                  +[dict(           tp='--'  ,t=140+g1   ,l=0                                                                        )] # 
                  +[dict(cid='svon',tp='ch'  ,t=155+g1   ,l=5+120        ,w=290  ,cap=svon_c                         ,act=1          )] # &t
@@ -544,7 +544,7 @@ class Command:
                  +[dict(cid='c4mo',tp='bt'  ,tid='maon' ,l=5+620+80 +10 ,w= 80  ,cap=_('Pre&sets')                                  )] # &s
                     +([] if not adva else []                        
                  +[dict(           tp='lb'  ,tid='d4mo' ,l=5            ,w=120  ,cap=_('Demo: ')                                    )] # 
-                 +[dict(cid='d4mo',tp='ed'  ,t=235      ,l=5+120        ,w=580+5                                    ,props='1,0,1'  )] #     ro,mono,brd
+                 +[dict(cid='d4mo',tp='ed'  ,t=235      ,l=5+120        ,w=580+5                                    ,ex0='1', ex1='0', ex2='1'  )] #     ro,mono,brd
                  +[dict(cid='u4mo',tp='bt'  ,tid='d4mo' ,l=5+120+580+10 ,w= 80  ,cap=_('&Update')                                   )] #  
                     )
                     )
@@ -555,7 +555,7 @@ class Command:
                  +[dict(cid='vrns',tp='cb-ro',tid='-'   ,l=5+120+ 80    ,w=160  ,items=vrns_l                       ,act=1          )] #
                     )
                  +[dict(cid='?'   ,tp='bt'  ,tid='-'    ,l=DLGW-260     ,w=80   ,cap=_('&Help')                                     )] # &h
-                 +[dict(cid='!'   ,tp='bt'  ,tid='-'    ,l=DLGW-175     ,w=80   ,cap=_('OK')                        ,props='1'      )] #     default
+                 +[dict(cid='!'   ,tp='bt'  ,tid='-'    ,l=DLGW-175     ,w=80   ,cap=_('OK')                        ,ex0='1'      )] #     default
                  +[dict(cid='-'   ,tp='bt'  ,t=DLGH-30  ,l=DLGW-90      ,w=80   ,cap=_('Cancel')                                    )] #  
                 )#NOTE: cfg
             aid, vals,fid,chds = dlg_wrapper(f(_('Configure "Backup File" ({})'), VERSION_V), DLGW, DLGH, cnts, vals, focus_cid=fid)
@@ -811,7 +811,7 @@ Predefined filters for {COUNTER} are:
         {COUNTER|lim:3|w:2} -> 01 -> 02 -> 03 -> 01 -> …
 ''')
     dlg_wrapper(_('Help'), GAP*2+600, GAP*3+25+650,
-         [dict(cid='htx',tp='me'    ,t=GAP  ,h=650  ,l=GAP          ,w=600  ,props='1,1,1' ) #  ro,mono,border
+         [dict(cid='htx',tp='me'    ,t=GAP  ,h=650  ,l=GAP          ,w=600  ,ex0='1', ex1='1', ex2='1' ) #  ro,mono,border
          ,dict(cid='-'  ,tp='bt'    ,t=GAP+650+GAP  ,l=GAP+600-90   ,w=90   ,cap=_('&Close')  )
          ], dict(htx=HELP_BODY), focus_cid='htx')
    #def dlg_help
