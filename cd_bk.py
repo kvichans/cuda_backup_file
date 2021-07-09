@@ -2,7 +2,7 @@
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
 Version:
-    '0.9.9 2021-03-03'
+    '0.9.10 2021-07-09'
 ToDo: (see end of file)
 '''
 
@@ -314,7 +314,8 @@ class Command:
                             +([] if len(prevs_a)==len(prevs) else []
                             + [  _('more…')+f('\t({})',len(prevs_a)-len(prevs))     ]     # all
                             ))
-                    what_m  = CdSw.dlg_menu(CdSw.MENU_LIST, '\n'.join(menu_l))
+                    what_m  = CdSw.dlg_menu(app.DMENU_LIST, '\n'.join(menu_l))
+#                   what_m  = CdSw.dlg_menu(CdSw.MENU_LIST, '\n'.join(menu_l))
                     CdSw.msg_status_alt('', 0)
         #           app.msg_status('')
                     if None is what_m or menu_l[what_m]==':::::::::::':
@@ -670,7 +671,8 @@ class Command:
                 prms_l +=['{'+pj_k+'}             \t'+pj_v 
                             for pj_k, pj_v in get_proj_vars().items()]
 #               prm_i   = CdSw.dlg_menu(CdSw.MENU_LIST, '\n'.join(prms_l))
-                prm_i   = CdSw.dlg_menu(CdSw.MENU_LIST_ALT, '\n'.join(prms_l))
+                prm_i   = CdSw.dlg_menu(app.DMENU_LIST_ALT, '\n'.join(prms_l))
+#               prm_i   = CdSw.dlg_menu(CdSw.MENU_LIST_ALT, '\n'.join(prms_l))
                 if prm_i is None:   continue
                 id      = {'v4wh':'wher'
                           ,'v4ma':'mask'
@@ -687,7 +689,8 @@ class Command:
                         +[_('name_2017-12-31_23-59-59.ext\t{FILE_STEM}_{YYYY}-{MM}-{DD}_{hh}-{mm}-{ss}.{FILE_EXT}')]
                         +[_('name.25jan17-001.ext\t{FILE_STEM}.{DD}{MMM}{YY}-{COUNTER|w:3}.{FILE_EXT}')]
                         )
-                rd_i    = CdSw.dlg_menu(CdSw.MENU_LIST_ALT, '\n'.join(rds_l))
+                rd_i    = CdSw.dlg_menu(app.DMENU_LIST_ALT, '\n'.join(rds_l))
+#               rd_i    = CdSw.dlg_menu(CdSw.MENU_LIST_ALT, '\n'.join(rds_l))
                 if rd_i is None:   continue
                 vals['mask']= rds_l[rd_i].split('\t')[1]
                 fid     = 'mask'
@@ -702,7 +705,8 @@ class Command:
                         +[_('name.1.ext  name.2.ext  name.3.ext  name.1.ext …\t{FILE_STEM}.{COUNTER|lim:3}.{FILE_EXT}')]
                         +[_('name.01.ext … name.99.ext  name.01.ext …\t{FILE_STEM}.{COUNTER|lim:99|w:2}.{FILE_EXT}')]
                         )
-                rd_i    = CdSw.dlg_menu(CdSw.MENU_LIST_ALT, '\n'.join(rds_l))
+                rd_i    = CdSw.dlg_menu(app.DMENU_LIST_ALT, '\n'.join(rds_l))
+#               rd_i    = CdSw.dlg_menu(CdSw.MENU_LIST_ALT, '\n'.join(rds_l))
                 if rd_i is None:   continue
                 vals['maon']= rds_l[rd_i].split('\t')[1]
                 fid     = 'maon'
