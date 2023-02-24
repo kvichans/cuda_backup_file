@@ -64,11 +64,8 @@ def width(s, w):
     return s.zfill(w)
 #   return s if w<=len(s) else str(c)*(w-len(s))+s
 
-def app_dir():
-    return app.app_path(app.APP_DIR_EXE)
-def app_drv():
-    d = app_dir()
-    return d[:2] if (os.name=='nt' and d[1]==':') else ''
+app_dir = app.app_path(app.APP_DIR_EXE)
+app_drv = app_dir[:2] if (os.name=='nt' and app_dir[1]==':') else ''
 
 def get_bk_path(path:str, dr_mask:str, fn_mask:str, ops='')->str:
     """ Calculation of path for backup.
@@ -128,8 +125,8 @@ def get_bk_path(path:str, dr_mask:str, fn_mask:str, ops='')->str:
                   ,mm       =f('{:02}', nw.minute)
                   ,s        =str(       nw.second)
                   ,ss       =f('{:02}', nw.second)
-                  ,APP_DIR  =app_dir()
-                  ,APP_DRIVE=app_drv()
+                  ,APP_DIR  =app_dir
+                  ,APP_DRIVE=app_drv
                   )
     mkv.update(get_proj_vars())
     FILTER_REDUCTS={
@@ -351,8 +348,8 @@ class Command:
             diff        = diff.replace('{COPY_PATH}'    , old_path)
             diff        = diff.replace('{CURRENT_PATH}' , cf_path)
             diff        = diff.replace('{FILE_PATH}'    , cf_path)
-            diff        = diff.replace('{APP_DIR}'      , app_dir())
-            diff        = diff.replace('{APP_DRIVE}'    , app_drv())
+            diff        = diff.replace('{APP_DIR}'      , app_dir)
+            diff        = diff.replace('{APP_DRIVE}'    , app_drv)
             pass;               LOG and log('diff={}', (diff))
             print('Backup File runs:', diff)
             subprocess.Popen(diff, shell=vrn_data['dfsh'])
