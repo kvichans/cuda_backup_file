@@ -341,12 +341,17 @@ class Command:
             # Compare
             pass;              #log('what={}'.format(what))
             old_path    = sv_dir + os.sep + prevs[what_p][1][0]
+            app_dir     = app.app_path(app.APP_DIR_EXE)
+            app_drv     = app_dir[:2] if (os.name=='nt' and app_dir[1]==':') else ''
             diff        = vrn_data['diff']
             diff        = diff.replace('{BACKUP_PATH}'  , old_path)
             diff        = diff.replace('{COPY_PATH}'    , old_path)
             diff        = diff.replace('{CURRENT_PATH}' , cf_path)
             diff        = diff.replace('{FILE_PATH}'    , cf_path)
+            diff        = diff.replace('{APP_DIR}'      , app_dir)
+            diff        = diff.replace('{APP_DRIVE}'    , app_drv)
             pass;               LOG and log('diff={}', (diff))
+            print('Backup File runs:', diff)
             subprocess.Popen(diff, shell=vrn_data['dfsh'])
             return
         
