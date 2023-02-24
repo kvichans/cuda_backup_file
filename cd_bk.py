@@ -826,7 +826,7 @@ Predefined filters for {COUNTER} are:
         {COUNTER|lim:3|w:2} -> 01 -> 02 -> 03 -> 01 -> …
 ''')
     dlg_wrapper(_('Help'), GAP*2+600, GAP*3+25+650,
-         [dict(cid='htx',tp='me'    ,t=GAP  ,h=650  ,l=GAP          ,w=600  ,ex0='1', ex1='1', ex2='1' ) #  ro,mono,border
+         [dict(cid='htx',tp='me'    ,t=GAP  ,h=650  ,l=GAP          ,w=600  ,ex0=1, ex1=1 ) #  ro,mono,border
          ,dict(cid='-'  ,tp='bt'    ,t=GAP+650+GAP  ,l=GAP+600-90   ,w=90   ,cap=_('&Close')  )
          ], dict(htx=HELP_BODY), focus_cid='htx')
    #def dlg_help
