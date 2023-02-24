@@ -1,6 +1,6 @@
 0.9.11 (2023-02-24)
 + support macros {APP_DIR} and {APP_DRIVE}
-- fix: Help dialog memo was not read-only and had not fixed font
+- fixed: Help dialog memo was not read-only and had not fixed font
 
 0.9.9 (2021-03-03)
 - fixed: i18n
