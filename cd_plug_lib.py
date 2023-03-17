@@ -436,6 +436,9 @@ def dlg_wrapper(title, w, h, cnts, in_vals={}, focus_cid=None):
         for k in ['cap', 'hint']:
             if k in cnt:
                 lst += [k+'='+str(cnt[k])]
+        for k in ['ex0', 'ex1', 'ex2', 'ex3', 'ex4', 'ex5', 'ex6', 'ex7']:
+            if k in cnt:
+                lst += [k+'='+str(cnt[k])]
         # Alexey: support 'ex0'..'ex9'
         if 'props' in cnt:
             props = cnt['props'].split(',')

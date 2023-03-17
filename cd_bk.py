@@ -1,8 +1,9 @@
 ''' Plugin for CudaText editor
 Authors:
     Andrey Kvichansky    (kvichans on github.com)
+    Alexey Torgashin (CudaText)
 Version:
-    '0.9.10 2021-07-09'
+    '0.9.11 2023-02-24'
 ToDo: (see end of file)
 '''
 
@@ -62,14 +63,18 @@ def title(s):   return s.title()
 def width(s, w):
     return s.zfill(w)
 #   return s if w<=len(s) else str(c)*(w-len(s))+s
+
+app_dir = app.app_path(app.APP_DIR_EXE)
+app_drv = app_dir[:2] if (os.name=='nt' and app_dir[1]==':') else ''
+
 def get_bk_path(path:str, dr_mask:str, fn_mask:str, ops='')->str:
-    """ Calculate path for backup.
+    """ Calculation of path for backup.
         Params
             path    Source path
             dr_mask How to caclucate target dir
             fn_mask How to caclucate target file name
             ops     Options
-        Wait macros in dr_mask and fn_mask      (path = 'p1/p2/p3/stem.ext')
+        Supported macros in dr_mask and fn_mask (path = 'p1/p2/p3/stem.ext')
             {FILE_DIR}                          ('p1/p2/p3')
             {FILE_NAME}                         ('stem.ext')
             {FILE_STEM}                         ('stem')
@@ -79,8 +84,10 @@ def get_bk_path(path:str, dr_mask:str, fn_mask:str, ops='')->str:
             {D} {DD}                Day     as  '7' or '07'
             {h} {hh}                Hours   as  '7' or '07' 
             {m} {mm}                Minutes as  '7' or '07' 
-            {s} {ss}                Seconds as  '7' or '07' 
-        Wait filters in macros                  (path = 'p1/p2/p3/stem.ext')
+            {s} {ss}                Seconds as  '7' or '07'
+            {APP_DIR}               CudaText folder path
+            {APP_DRIVE}             CudaText drive/disk letter (Windows only)
+        Supported filters in macros             (path = 'p1/p2/p3/stem.ext')
             {VAR|parent:level} - cut path, default level is 1
             {VAR|name}         - last segment of path
             {VAR|p}            - short name
@@ -118,6 +125,8 @@ def get_bk_path(path:str, dr_mask:str, fn_mask:str, ops='')->str:
                   ,mm       =f('{:02}', nw.minute)
                   ,s        =str(       nw.second)
                   ,ss       =f('{:02}', nw.second)
+                  ,APP_DIR  =app_dir
+                  ,APP_DRIVE=app_drv
                   )
     mkv.update(get_proj_vars())
     FILTER_REDUCTS={
@@ -339,7 +348,10 @@ class Command:
             diff        = diff.replace('{COPY_PATH}'    , old_path)
             diff        = diff.replace('{CURRENT_PATH}' , cf_path)
             diff        = diff.replace('{FILE_PATH}'    , cf_path)
+            diff        = diff.replace('{APP_DIR}'      , app_dir)
+            diff        = diff.replace('{APP_DRIVE}'    , app_drv)
             pass;               LOG and log('diff={}', (diff))
+            print('Backup File runs:', diff)
             subprocess.Popen(diff, shell=vrn_data['dfsh'])
             return
         
@@ -662,6 +674,8 @@ class Command:
                         +['{mm}                   \t'+_('Current minutes as 09')]
                         +['{s}                    \t'+_('Current seconds as 9')]
                         +['{ss}                   \t'+_('Current seconds as 09')]
+                        +['{APP_DIR}              \t'+_('CudaText folder path')]
+                        +['{APP_DRIVE}            \t'+_('CudaText drive/disk letter (Windows only)')]
                         )+([] if aid not in ('v4ma', 'v4mo') else []
                         +['{COUNTER}              \t'+_('Auto-incremented as: 1, 2, 3, 4, 5, …')]
                         +['{COUNTER|lim:3}        \t'+_('Auto-incremented as: 1, 2, 3, 1, 2, …')]
@@ -785,6 +799,8 @@ the following macros are processed.     (If path is 'p1/p2/p3/stem.ext')
     {m} {mm}              - Minutes as  '7' or '07' 
     {s} {ss}              - Seconds as  '7' or '07' 
     {COUNTER}             - Auto-incremented number
+    {APP_DIR}             - CudaText folder path
+    {APP_DRIVE}           - CudaText drive/disk letter (Windows only)
  
 Filters. 
 All macros can include suffix (function) to transform value.
@@ -815,7 +831,7 @@ Predefined filters for {COUNTER} are:
         {COUNTER|lim:3|w:2} -> 01 -> 02 -> 03 -> 01 -> …
 ''')
     dlg_wrapper(_('Help'), GAP*2+600, GAP*3+25+650,
-         [dict(cid='htx',tp='me'    ,t=GAP  ,h=650  ,l=GAP          ,w=600  ,ex0='1', ex1='1', ex2='1' ) #  ro,mono,border
+         [dict(cid='htx',tp='me'    ,t=GAP  ,h=650  ,l=GAP          ,w=600  ,ex0=1, ex1=1 ) #  ro,mono,border
          ,dict(cid='-'  ,tp='bt'    ,t=GAP+650+GAP  ,l=GAP+600-90   ,w=90   ,cap=_('&Close')  )
          ], dict(htx=HELP_BODY), focus_cid='htx')
    #def dlg_help

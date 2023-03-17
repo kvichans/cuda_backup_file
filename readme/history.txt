@@ -1,11 +1,15 @@
+0.9.11 (2023-02-24)
++ support macros {APP_DIR} and {APP_DRIVE}
+- fixed: Help dialog memo was not read-only and had not fixed font
+
 0.9.9 (2021-03-03)
-*fixed: i18n
+- fixed: i18n
 
 0.9.8 (2017-02-07)
-+support both Syn+Cud
++ support both SynWrite+CudaText
 
 0.8.5 (2017-02-05)
-+add opt to skip diff
++ add opt to skip diff
 
 0.5.0 (2017-01-23)
-init
+initial
